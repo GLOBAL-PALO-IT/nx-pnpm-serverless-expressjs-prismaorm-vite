@@ -48,9 +48,11 @@ app.get('/api/test', (req, res) => {
 // Import services
 import { userService } from './services/userService';
 import { postService } from './services/postService';
+import { authService } from './services/authService';
 
 // Import validation middleware and schemas
 import { validateBody, validateParams, validateQuery, validateMultiple } from './middleware/validation';
+import { authenticateToken, optionalAuthentication } from './middleware/auth';
 import {
   CreateUserSchema,
   UpdateUserSchema,
@@ -62,6 +64,10 @@ import {
   PostIdSchema,
   AuthorIdSchema,
   PostQuerySchema,
+  LoginSchema,
+  RegisterSchema,
+  RefreshTokenSchema,
+  LogoutSchema,
 } from './schemas';
 
 // Error handler helper
@@ -72,9 +78,64 @@ const handleError = (res: express.Response, error: any, defaultMessage = 'Intern
   res.status(statusCode).json({ error: message });
 };
 
+// Authentication Routes
+// POST /auth/register - Register a new user
+app.post('/auth/register', validateBody(RegisterSchema), async (req, res) => {
+  try {
+    const { email, name, password } = req.body;
+    const result = await authService.register({ email, name, password });
+    res.status(201).json(result);
+  } catch (error) {
+    handleError(res, error, 'Registration failed');
+  }
+});
+
+// POST /auth/login - Login user
+app.post('/auth/login', validateBody(LoginSchema), async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    const result = await authService.login({ email, password });
+    res.json(result);
+  } catch (error) {
+    handleError(res, error, 'Login failed');
+  }
+});
+
+// POST /auth/refresh - Refresh access token
+app.post('/auth/refresh', validateBody(RefreshTokenSchema), async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const tokens = await authService.refreshAccessToken(refreshToken);
+    res.json({ tokens });
+  } catch (error) {
+    handleError(res, error, 'Token refresh failed');
+  }
+});
+
+// POST /auth/logout - Logout user
+app.post('/auth/logout', validateBody(LogoutSchema), async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    await authService.logout(refreshToken);
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    handleError(res, error, 'Logout failed');
+  }
+});
+
+// GET /auth/me - Get current user info (protected route)
+app.get('/auth/me', authenticateToken, async (req, res) => {
+  try {
+    // User is already attached to req by authenticateToken middleware
+    res.json({ user: req.user });
+  } catch (error) {
+    handleError(res, error, 'Failed to get user info');
+  }
+});
+
 // User Routes
-// GET /api/users - Get all users
-app.get('/api/users', validateQuery(UserQuerySchema), async (req, res) => {
+// GET /api/users - Get all users (protected)
+app.get('/api/users', authenticateToken, validateQuery(UserQuerySchema), async (req, res) => {
   try {
     const { includePostCount } = req.query;
     const users = includePostCount 
@@ -86,8 +147,8 @@ app.get('/api/users', validateQuery(UserQuerySchema), async (req, res) => {
   }
 });
 
-// GET /api/users/:id - Get user by ID
-app.get('/api/users/:id', validateParams(UserIdSchema), async (req, res) => {
+// GET /api/users/:id - Get user by ID (protected)
+app.get('/api/users/:id', authenticateToken, validateParams(UserIdSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const user = await userService.getUserById(id);
@@ -100,8 +161,8 @@ app.get('/api/users/:id', validateParams(UserIdSchema), async (req, res) => {
   }
 });
 
-// POST /api/users - Create a new user
-app.post('/api/users', validateBody(CreateUserSchema), async (req, res) => {
+// POST /api/users - Create a new user (protected - admin only)
+app.post('/api/users', authenticateToken, validateBody(CreateUserSchema), async (req, res) => {
   try {
     const { email, name } = req.body;
     const user = await userService.createUser({ email, name });
@@ -111,8 +172,9 @@ app.post('/api/users', validateBody(CreateUserSchema), async (req, res) => {
   }
 });
 
-// PUT /api/users/:id - Update user
+// PUT /api/users/:id - Update user (protected - own profile only)
 app.put('/api/users/:id', 
+  authenticateToken,
   validateMultiple({
     params: UserIdSchema,
     body: UpdateUserSchema
@@ -122,6 +184,11 @@ app.put('/api/users/:id',
       const { id } = req.params;
       const { email, name } = req.body;
 
+      // Check if user is updating their own profile
+      if (req.user!.id !== id) {
+        return res.status(403).json({ error: 'You can only update your own profile' });
+      }
+
       const user = await userService.updateUser(id, { email, name });
       res.json(user);
     } catch (error) {
@@ -130,10 +197,16 @@ app.put('/api/users/:id',
   }
 );
 
-// DELETE /api/users/:id - Delete user
-app.delete('/api/users/:id', validateParams(UserIdSchema), async (req, res) => {
+// DELETE /api/users/:id - Delete user (protected - own profile only)
+app.delete('/api/users/:id', authenticateToken, validateParams(UserIdSchema), async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Check if user is deleting their own profile
+    if (req.user!.id !== id) {
+      return res.status(403).json({ error: 'You can only delete your own profile' });
+    }
+
     await userService.deleteUser(id);
     res.status(204).send();
   } catch (error) {
@@ -141,8 +214,8 @@ app.delete('/api/users/:id', validateParams(UserIdSchema), async (req, res) => {
   }
 });
 
-// GET /api/users/email/:email - Get user by email
-app.get('/api/users/email/:email', validateParams(UserEmailSchema), async (req, res) => {
+// GET /api/users/email/:email - Get user by email (protected)
+app.get('/api/users/email/:email', authenticateToken, validateParams(UserEmailSchema), async (req, res) => {
   try {
     const { email } = req.params;
     const user = await userService.getUserByEmail(email);
@@ -156,18 +229,17 @@ app.get('/api/users/email/:email', validateParams(UserEmailSchema), async (req, 
 });
 
 // Post Routes
-// GET /api/posts - Get all posts with optional filters
-app.get('/api/posts', validateQuery(PostQuerySchema), async (req, res) => {
+// GET /api/posts - Get all posts with optional filters (protected)
+app.get('/api/posts', authenticateToken, validateQuery(PostQuerySchema), async (req, res) => {
   try {
-    const { published, authorId, search } = req.query;
+    const { published, search } = req.query;
     
     const filters: any = {};
     if (published !== undefined) {
       filters.published = published;
     }
-    if (authorId) {
-      filters.authorId = authorId;
-    }
+    // Always filter by current authenticated user
+    filters.authorId = req.user!.id;
     if (search) {
       filters.searchTerm = search;
     }
@@ -179,8 +251,8 @@ app.get('/api/posts', validateQuery(PostQuerySchema), async (req, res) => {
   }
 });
 
-// GET /api/posts/:id - Get post by ID
-app.get('/api/posts/:id', validateParams(PostIdSchema), async (req, res) => {
+// GET /api/posts/:id - Get post by ID (protected)
+app.get('/api/posts/:id', authenticateToken, validateParams(PostIdSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const post = await postService.getPostById(id);
@@ -193,16 +265,17 @@ app.get('/api/posts/:id', validateParams(PostIdSchema), async (req, res) => {
   }
 });
 
-// POST /api/posts - Create a new post
-app.post('/api/posts', validateBody(CreatePostSchema), async (req, res) => {
+// POST /api/posts - Create a new post (protected)
+app.post('/api/posts', authenticateToken, validateBody(CreatePostSchema), async (req, res) => {
   try {
-    const { title, content, published, authorId } = req.body;
+    const { title, content, published } = req.body;
 
+    // Use the authenticated user as the author
     const post = await postService.createPost({
       title,
       content,
-      published,
-      authorId,
+      published: published ?? false,
+      authorId: req.user!.id,
     });
     res.status(201).json(post);
   } catch (error) {
@@ -210,8 +283,9 @@ app.post('/api/posts', validateBody(CreatePostSchema), async (req, res) => {
   }
 });
 
-// PUT /api/posts/:id - Update post
+// PUT /api/posts/:id - Update post (protected - author only)
 app.put('/api/posts/:id',
+  authenticateToken,
   validateMultiple({
     params: PostIdSchema,
     body: UpdatePostSchema
@@ -221,6 +295,16 @@ app.put('/api/posts/:id',
       const { id } = req.params;
       const { title, content, published } = req.body;
 
+      // Check if the post exists and user is the author
+      const existingPost = await postService.getPostById(id);
+      if (!existingPost) {
+        return res.status(404).json({ error: 'Post not found' });
+      }
+
+      if (existingPost.authorId !== req.user!.id) {
+        return res.status(403).json({ error: 'You can only update your own posts' });
+      }
+
       const post = await postService.updatePost(id, { title, content, published });
       res.json(post);
     } catch (error) {
@@ -229,10 +313,21 @@ app.put('/api/posts/:id',
   }
 );
 
-// DELETE /api/posts/:id - Delete post
-app.delete('/api/posts/:id', validateParams(PostIdSchema), async (req, res) => {
+// DELETE /api/posts/:id - Delete post (protected - author only)
+app.delete('/api/posts/:id', authenticateToken, validateParams(PostIdSchema), async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Check if the post exists and user is the author
+    const existingPost = await postService.getPostById(id);
+    if (!existingPost) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    if (existingPost.authorId !== req.user!.id) {
+      return res.status(403).json({ error: 'You can only delete your own posts' });
+    }
+
     await postService.deletePost(id);
     res.status(204).send();
   } catch (error) {
@@ -240,10 +335,21 @@ app.delete('/api/posts/:id', validateParams(PostIdSchema), async (req, res) => {
   }
 });
 
-// PATCH /api/posts/:id/toggle-publish - Toggle post publish status
-app.patch('/api/posts/:id/toggle-publish', validateParams(PostIdSchema), async (req, res) => {
+// PATCH /api/posts/:id/toggle-publish - Toggle post publish status (protected - author only)
+app.patch('/api/posts/:id/toggle-publish', authenticateToken, validateParams(PostIdSchema), async (req, res) => {
   try {
     const { id } = req.params;
+    
+    // Check if the post exists and user is the author
+    const existingPost = await postService.getPostById(id);
+    if (!existingPost) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    if (existingPost.authorId !== req.user!.id) {
+      return res.status(403).json({ error: 'You can only modify your own posts' });
+    }
+
     const post = await postService.togglePublishStatus(id);
     res.json(post);
   } catch (error) {
@@ -251,8 +357,8 @@ app.patch('/api/posts/:id/toggle-publish', validateParams(PostIdSchema), async (
   }
 });
 
-// GET /api/posts/author/:authorId - Get posts by author
-app.get('/api/posts/author/:authorId', validateParams(AuthorIdSchema), async (req, res) => {
+// GET /api/posts/author/:authorId - Get posts by author (protected)
+app.get('/api/posts/author/:authorId', authenticateToken, validateParams(AuthorIdSchema), async (req, res) => {
   try {
     const { authorId } = req.params;
     const posts = await postService.getPostsByAuthor(authorId);
@@ -262,8 +368,8 @@ app.get('/api/posts/author/:authorId', validateParams(AuthorIdSchema), async (re
   }
 });
 
-// GET /api/posts/published - Get only published posts
-app.get('/api/posts/published', async (req, res) => {
+// GET /api/posts/published - Get only published posts (protected)
+app.get('/api/posts/published', authenticateToken, async (req, res) => {
   try {
     const posts = await postService.getPublishedPosts();
     res.json(posts);

@@ -1,3 +1,5 @@
+import { authService } from './authService';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export interface User {
@@ -35,7 +37,6 @@ export interface CreatePostInput {
   title: string;
   content?: string;
   published?: boolean;
-  authorId: string;
 }
 
 export interface UpdatePostInput {
@@ -46,19 +47,59 @@ export interface UpdatePostInput {
 
 export interface PostFilters {
   published?: boolean;
-  authorId?: string;
   search?: string;
 }
 
 class ApiService {
   private async fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const accessToken = authService.getAccessToken();
+    
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
+        ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
         ...options?.headers,
       },
       ...options,
     });
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (response.status === 401 && accessToken) {
+      try {
+        const refreshToken = authService.getRefreshToken();
+        if (refreshToken) {
+          await authService.refreshAccessToken(refreshToken);
+          const newAccessToken = authService.getAccessToken();
+          
+          // Retry the request with new token
+          const retryResponse = await fetch(`${API_BASE_URL}${endpoint}`, {
+            headers: {
+              'Content-Type': 'application/json',
+              ...(newAccessToken && { Authorization: `Bearer ${newAccessToken}` }),
+              ...options?.headers,
+            },
+            ...options,
+          });
+
+          if (!retryResponse.ok) {
+            const errorData = await retryResponse.json().catch(() => ({}));
+            throw new Error(errorData.error || `API Error: ${retryResponse.statusText}`);
+          }
+
+          // Handle 204 No Content responses
+          if (retryResponse.status === 204) {
+            return null as T;
+          }
+
+          return retryResponse.json();
+        }
+      } catch (refreshError) {
+        // If refresh fails, clear tokens and redirect to login
+        authService.clearTokens();
+        window.location.href = '/login';
+        throw new Error('Session expired. Please log in again.');
+      }
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -121,9 +162,6 @@ class ApiService {
     const params = new URLSearchParams();
     if (filters?.published !== undefined) {
       params.append('published', filters.published.toString());
-    }
-    if (filters?.authorId) {
-      params.append('authorId', filters.authorId);
     }
     if (filters?.search) {
       params.append('search', filters.search);

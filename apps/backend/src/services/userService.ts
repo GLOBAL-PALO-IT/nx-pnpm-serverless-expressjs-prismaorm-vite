@@ -1,5 +1,6 @@
 import { prisma } from '../libs/database';
 import { User, Prisma } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 export interface CreateUserInput {
   email: string;
@@ -61,8 +62,14 @@ export class UserService {
 
   async createUser(data: CreateUserInput): Promise<User> {
     try {
+      // Hash a default password for admin-created users
+      const defaultPassword = await bcrypt.hash('ChangeMe123!', 12);
+      
       return await prisma.user.create({
-        data,
+        data: {
+          ...data,
+          password: defaultPassword,
+        } as any,
         include: {
           posts: true,
         },

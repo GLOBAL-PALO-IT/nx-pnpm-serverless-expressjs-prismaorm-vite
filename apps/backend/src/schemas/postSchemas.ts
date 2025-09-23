@@ -11,12 +11,11 @@ export const PostSchema = z.object({
   updatedAt: z.date().optional(),
 });
 
-// Schema for creating a post
+// Schema for creating a post (authorId will be set from authenticated user)
 export const CreatePostSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
   content: z.string().optional(),
-  published: z.boolean().default(false),
-  authorId: z.string().cuid('Invalid author ID format'),
+  published: z.boolean().default(false).optional(),
 });
 
 // Schema for updating a post
@@ -42,7 +41,6 @@ export const PostQuerySchema = z.object({
     if (val === undefined) return undefined;
     return val === 'true';
   }),
-  authorId: z.string().cuid('Invalid author ID format').optional(),
   search: z.string().optional(),
 });
 

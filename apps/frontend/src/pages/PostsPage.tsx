@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Post, User, CreatePostInput, UpdatePostInput, PostFilters, apiService } from '../services/api';
+import { Post, CreatePostInput, UpdatePostInput, PostFilters, apiService } from '../services/api';
 import { PostList } from '../components/PostList';
 import { PostForm } from '../components/PostForm';
 import styles from './PostsPage.module.css';
 
 export function PostsPage() {
   const [posts, setPosts] = useState<Post[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [formLoading, setFormLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +14,6 @@ export function PostsPage() {
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAuthor, setSelectedAuthor] = useState('');
   const [publishedFilter, setPublishedFilter] = useState<'all' | 'published' | 'draft'>('all');
 
   const loadPosts = async () => {
@@ -27,10 +25,6 @@ export function PostsPage() {
       
       if (searchTerm) {
         filters.search = searchTerm;
-      }
-      
-      if (selectedAuthor) {
-        filters.authorId = selectedAuthor;
       }
       
       if (publishedFilter !== 'all') {
@@ -46,22 +40,9 @@ export function PostsPage() {
     }
   };
 
-  const loadUsers = async () => {
-    try {
-      const data = await apiService.getUsers();
-      setUsers(data);
-    } catch (err) {
-      console.error('Failed to load users:', err);
-    }
-  };
-
-  useEffect(() => {
-    loadUsers();
-  }, []);
-
   useEffect(() => {
     loadPosts();
-  }, [searchTerm, selectedAuthor, publishedFilter]);
+  }, [searchTerm, publishedFilter]);
 
   const handleCreatePost = async (data: CreatePostInput) => {
     try {
@@ -128,9 +109,16 @@ export function PostsPage() {
     setEditingPost(null);
   };
 
+  const handleFormSubmit = (data: CreatePostInput | UpdatePostInput) => {
+    if (editingPost) {
+      handleUpdatePost(data as UpdatePostInput);
+    } else {
+      handleCreatePost(data as CreatePostInput);
+    }
+  };
+
   const clearFilters = () => {
     setSearchTerm('');
-    setSelectedAuthor('');
     setPublishedFilter('all');
   };
 
@@ -144,17 +132,11 @@ export function PostsPage() {
         <button
           onClick={() => setShowForm(true)}
           className={`${styles.button} ${styles.buttonPrimary}`}
-          disabled={loading || users.length === 0}
+          disabled={loading}
         >
           ➕ Add Post
         </button>
       </div>
-
-      {users.length === 0 && !loading && (
-        <div className={styles.warning}>
-          <p>⚠️ You need to create users first before you can create posts.</p>
-        </div>
-      )}
 
       {error && (
         <div className={styles.error}>
@@ -172,8 +154,7 @@ export function PostsPage() {
         <div className={styles.formContainer}>
           <PostForm
             post={editingPost || undefined}
-            users={users}
-            onSubmit={editingPost ? handleUpdatePost : handleCreatePost}
+            onSubmit={handleFormSubmit}
             onCancel={handleCancelForm}
             loading={formLoading}
           />
@@ -193,21 +174,6 @@ export function PostsPage() {
 
         <div className={styles.filterGroup}>
           <select
-            value={selectedAuthor}
-            onChange={(e) => setSelectedAuthor(e.target.value)}
-            className={styles.filterSelect}
-          >
-            <option value="">All authors</option>
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name || user.email}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className={styles.filterGroup}>
-          <select
             value={publishedFilter}
             onChange={(e) => setPublishedFilter(e.target.value as 'all' | 'published' | 'draft')}
             className={styles.filterSelect}
@@ -218,7 +184,7 @@ export function PostsPage() {
           </select>
         </div>
 
-        {(searchTerm || selectedAuthor || publishedFilter !== 'all') && (
+        {(searchTerm || publishedFilter !== 'all') && (
           <button
             onClick={clearFilters}
             className={`${styles.button} ${styles.buttonSecondary}`}
@@ -250,14 +216,14 @@ export function PostsPage() {
           onDelete={handleDeletePost}
           onTogglePublish={handleTogglePublish}
           loading={loading}
-          showAuthor={!selectedAuthor}
+          showAuthor={true}
         />
       </div>
 
       {!loading && posts.length === 0 && (
         <div className={styles.noResults}>
           <p>No posts found.</p>
-          {(searchTerm || selectedAuthor || publishedFilter !== 'all') && (
+          {(searchTerm || publishedFilter !== 'all') && (
             <button
               onClick={clearFilters}
               className={`${styles.button} ${styles.buttonSecondary}`}

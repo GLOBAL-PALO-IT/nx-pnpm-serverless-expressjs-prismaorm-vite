@@ -1,34 +1,28 @@
 import React, { useState } from 'react';
-import { Post, User, CreatePostInput, UpdatePostInput } from '../services/api';
+import { Post, CreatePostInput, UpdatePostInput } from '../services/api';
 import styles from './PostForm.module.css';
 
 interface PostFormProps {
   post?: Post;
-  users: User[];
   onSubmit: (data: CreatePostInput | UpdatePostInput) => void;
   onCancel?: () => void;
   loading?: boolean;
 }
 
-export function PostForm({ post, users, onSubmit, onCancel, loading = false }: PostFormProps) {
+export function PostForm({ post, onSubmit, onCancel, loading = false }: PostFormProps) {
   const [formData, setFormData] = useState({
     title: post?.title || '',
     content: post?.content || '',
     published: post?.published || false,
-    authorId: post?.authorId || '',
   });
 
-  const [errors, setErrors] = useState<{ title?: string; authorId?: string }>({});
+  const [errors, setErrors] = useState<{ title?: string }>({});
 
   const validateForm = () => {
-    const newErrors: { title?: string; authorId?: string } = {};
+    const newErrors: { title?: string } = {};
     
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
-    }
-
-    if (!formData.authorId && !post) {
-      newErrors.authorId = 'Author is required';
     }
 
     setErrors(newErrors);
@@ -47,11 +41,6 @@ export function PostForm({ post, users, onSubmit, onCancel, loading = false }: P
       content: formData.content.trim() || undefined,
       published: formData.published,
     };
-
-    // Add authorId for new posts
-    if (!post) {
-      (submitData as CreatePostInput).authorId = formData.authorId;
-    }
 
     onSubmit(submitData);
   };
@@ -105,30 +94,6 @@ export function PostForm({ post, users, onSubmit, onCancel, loading = false }: P
           placeholder="Write your post content here..."
         />
       </div>
-
-      {!post && (
-        <div className={styles.formGroup}>
-          <label htmlFor="authorId" className={styles.label}>
-            Author *
-          </label>
-          <select
-            id="authorId"
-            value={formData.authorId}
-            onChange={handleChange('authorId')}
-            className={`${styles.select} ${errors.authorId ? styles.inputError : ''}`}
-            disabled={loading}
-            required
-          >
-            <option value="">Select an author</option>
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name || user.email}
-              </option>
-            ))}
-          </select>
-          {errors.authorId && <span className={styles.error}>{errors.authorId}</span>}
-        </div>
-      )}
 
       <div className={styles.formGroup}>
         <label className={styles.checkboxLabel}>

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -10,6 +11,10 @@ async function main() {
   await prisma.post.deleteMany();
   await prisma.user.deleteMany();
 
+  // Hash password for all seed users (password: "password123")
+  console.log('🔐 Hashing passwords...');
+  const hashedPassword = await bcrypt.hash('password123', 12);
+
   // Create users
   console.log('👥 Creating users...');
   const users = await Promise.all([
@@ -17,25 +22,29 @@ async function main() {
       data: {
         email: 'alice@example.com',
         name: 'Alice Johnson',
-      },
+        password: hashedPassword,
+      } as any,
     }),
     prisma.user.create({
       data: {
         email: 'bob@example.com',
         name: 'Bob Smith',
-      },
+        password: hashedPassword,
+      } as any,
     }),
     prisma.user.create({
       data: {
         email: 'charlie@example.com',
         name: 'Charlie Brown',
-      },
+        password: hashedPassword,
+      } as any,
     }),
     prisma.user.create({
       data: {
         email: 'diana@example.com',
         name: 'Diana Prince',
-      },
+        password: hashedPassword,
+      } as any,
     }),
   ]);
 
@@ -141,6 +150,14 @@ async function main() {
   console.log(`   Posts: ${posts.length}`);
   console.log(`   Published posts: ${posts.filter(p => p.published).length}`);
   console.log(`   Draft posts: ${posts.filter(p => !p.published).length}`);
+
+  console.log('\n🔐 Login Credentials:');
+  console.log('   All users have the password: "password123"');
+  console.log('   Available users:');
+  console.log('   • alice@example.com (Alice Johnson)');
+  console.log('   • bob@example.com (Bob Smith)');
+  console.log('   • charlie@example.com (Charlie Brown)');
+  console.log('   • diana@example.com (Diana Prince)');
 
   console.log('\n🎉 Seed completed successfully!');
 }
