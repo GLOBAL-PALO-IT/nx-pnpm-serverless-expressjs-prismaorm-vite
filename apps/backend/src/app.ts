@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { logger } from './libs/logger';
 
 // Load environment variables
 dotenv.config();
@@ -12,8 +13,15 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  logger.http(`${req.method} ${req.url} - ${req.ip}`);
+  next();
+});
+
 // Routes
 app.get('/', (req, res) => {
+  logger.info('Root endpoint accessed');
   res.json({ 
     message: 'Hello from Nx Serverless Backend!',
     timestamp: new Date().toISOString(),
@@ -22,6 +30,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/health', (req, res) => {
+  logger.info('Health check endpoint accessed');
   res.json({ 
     status: 'healthy',
     timestamp: new Date().toISOString()
@@ -57,7 +66,7 @@ import {
 
 // Error handler helper
 const handleError = (res: express.Response, error: any, defaultMessage = 'Internal server error') => {
-  console.error('API Error:', error);
+  logger.error('API Error:', error);
   const message = error.message || defaultMessage;
   const statusCode = error.statusCode || 500;
   res.status(statusCode).json({ error: message });
