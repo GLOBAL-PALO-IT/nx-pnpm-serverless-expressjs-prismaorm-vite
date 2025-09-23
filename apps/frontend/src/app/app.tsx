@@ -1,25 +1,27 @@
 import { Route, Routes, Link, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { apiService } from '../services/api';
+import { rootService } from '../services/rootService';
 import { UsersPage } from '../pages/UsersPage';
 import { PostsPage } from '../pages/PostsPage';
 import { LoginPage } from '../pages/LoginPage';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './app.module.css';
+import { postService } from '../services/postService';
+import { userService } from '../services/userService';
 
 export function App() {
   const [apiStatus, setApiStatus] = useState<string>('Checking...');
   const [users, setUsers] = useState<any>(null);
   const [posts, setPosts] = useState<any>(null);
-  
+
   const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   useEffect(() => {
     // Test API connectivity
     const testApi = async () => {
       try {
-        const health = await apiService.getHealthCheck();
+        const health = await rootService.getHealthCheck();
         setApiStatus('Connected ✅');
         console.log('API Health:', health);
       } catch (error) {
@@ -33,7 +35,7 @@ export function App() {
 
   const fetchUsers = async () => {
     try {
-      const data = await apiService.getUsers();
+      const data = await userService.getUsers();
       setUsers(data);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -42,7 +44,7 @@ export function App() {
 
   const fetchPosts = async () => {
     try {
-      const data = await apiService.getPosts();
+      const data = await postService.getPosts();
       setPosts(data);
     } catch (error) {
       console.error('Error fetching posts:', error);
@@ -61,14 +63,16 @@ export function App() {
   if (isLoading) {
     return (
       <div className={styles.app}>
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          fontSize: '1.2rem',
-          color: '#6b7280'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            fontSize: '1.2rem',
+            color: '#6b7280',
+          }}
+        >
           Loading...
         </div>
       </div>
@@ -93,15 +97,16 @@ export function App() {
             <h1>Nx Serverless Monorepo</h1>
             <p>React Frontend + Express Serverless Backend</p>
             <div className={styles.status}>
-              Backend Status: <span className={styles.statusText}>{apiStatus}</span>
+              Backend Status:{' '}
+              <span className={styles.statusText}>{apiStatus}</span>
             </div>
           </div>
           <div className={styles.userSection}>
             <span className={styles.welcomeText}>
               Welcome, {user?.name || user?.email}!
             </span>
-            <button 
-              onClick={handleLogout} 
+            <button
+              onClick={handleLogout}
               className={styles.logoutButton}
               title="Logout"
             >
@@ -112,9 +117,15 @@ export function App() {
       </header>
 
       <nav className={styles.nav}>
-        <Link to="/" className={styles.navLink}>Home</Link>
-        <Link to="/users" className={styles.navLink}>Users</Link>
-        <Link to="/posts" className={styles.navLink}>Posts</Link>
+        <Link to="/" className={styles.navLink}>
+          Home
+        </Link>
+        <Link to="/users" className={styles.navLink}>
+          Users
+        </Link>
+        <Link to="/posts" className={styles.navLink}>
+          Posts
+        </Link>
       </nav>
 
       <main className={styles.main}>

@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Post, CreatePostInput, UpdatePostInput, PostFilters, apiService } from '../services/api';
+import {
+  Post,
+  CreatePostInput,
+  UpdatePostInput,
+  PostFilters,
+} from '../services/api';
+import { postService } from '../services/postService';
 import { PostList } from '../components/PostList';
 import { PostForm } from '../components/PostForm';
 import styles from './PostsPage.module.css';
@@ -11,27 +17,29 @@ export function PostsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
-  
+
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
-  const [publishedFilter, setPublishedFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [publishedFilter, setPublishedFilter] = useState<
+    'all' | 'published' | 'draft'
+  >('all');
 
   const loadPosts = async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const filters: PostFilters = {};
-      
+
       if (searchTerm) {
         filters.search = searchTerm;
       }
-      
+
       if (publishedFilter !== 'all') {
         filters.published = publishedFilter === 'published';
       }
 
-      const data = await apiService.getPosts(filters);
+      const data = await postService.getPosts(filters);
       setPosts(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load posts');
@@ -48,7 +56,7 @@ export function PostsPage() {
     try {
       setFormLoading(true);
       setError(null);
-      await apiService.createPost(data);
+      await postService.createPost(data);
       await loadPosts(); // Refresh the list
       setShowForm(false);
     } catch (err) {
@@ -60,11 +68,11 @@ export function PostsPage() {
 
   const handleUpdatePost = async (data: UpdatePostInput) => {
     if (!editingPost) return;
-    
+
     try {
       setFormLoading(true);
       setError(null);
-      await apiService.updatePost(editingPost.id, data);
+      await postService.updatePost(editingPost.id, data);
       await loadPosts(); // Refresh the list
       setEditingPost(null);
       setShowForm(false);
@@ -82,7 +90,7 @@ export function PostsPage() {
 
     try {
       setError(null);
-      await apiService.deletePost(post.id);
+      await postService.deletePost(post.id);
       await loadPosts(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete post');
@@ -92,10 +100,12 @@ export function PostsPage() {
   const handleTogglePublish = async (post: Post) => {
     try {
       setError(null);
-      await apiService.togglePostPublishStatus(post.id);
+      await postService.togglePostPublishStatus(post.id);
       await loadPosts(); // Refresh the list
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to toggle post status');
+      setError(
+        err instanceof Error ? err.message : 'Failed to toggle post status'
+      );
     }
   };
 
@@ -141,10 +151,7 @@ export function PostsPage() {
       {error && (
         <div className={styles.error}>
           <p>❌ {error}</p>
-          <button 
-            onClick={() => setError(null)}
-            className={styles.errorClose}
-          >
+          <button onClick={() => setError(null)} className={styles.errorClose}>
             ✕
           </button>
         </div>
@@ -167,7 +174,7 @@ export function PostsPage() {
             type="text"
             placeholder="Search posts..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             className={styles.searchInput}
           />
         </div>
@@ -175,7 +182,11 @@ export function PostsPage() {
         <div className={styles.filterGroup}>
           <select
             value={publishedFilter}
-            onChange={(e) => setPublishedFilter(e.target.value as 'all' | 'published' | 'draft')}
+            onChange={e =>
+              setPublishedFilter(
+                e.target.value as 'all' | 'published' | 'draft'
+              )
+            }
             className={styles.filterSelect}
           >
             <option value="all">All posts</option>

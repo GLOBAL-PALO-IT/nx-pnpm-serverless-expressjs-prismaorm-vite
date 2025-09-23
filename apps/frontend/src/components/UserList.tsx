@@ -10,7 +10,13 @@ interface UserListProps {
   loading?: boolean;
 }
 
-export function UserList({ users, onEdit, onDelete, onViewPosts, loading = false }: UserListProps) {
+export function UserList({
+  users,
+  onEdit,
+  onDelete,
+  onViewPosts,
+  loading = false,
+}: UserListProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -38,16 +44,14 @@ export function UserList({ users, onEdit, onDelete, onViewPosts, loading = false
 
   return (
     <div className={styles.userList}>
-      {users.map((user) => (
+      {users.map(user => (
         <div key={user.id} className={styles.userCard}>
           <div className={styles.userInfo}>
             <div className={styles.userHeader}>
-              <h3 className={styles.userName}>
-                {user.name || 'Unnamed User'}
-              </h3>
+              <h3 className={styles.userName}>{user.name || 'Unnamed User'}</h3>
               <span className={styles.userEmail}>{user.email}</span>
             </div>
-            
+
             <div className={styles.userMeta}>
               <span className={styles.metaItem}>
                 Created: {formatDate(user.createdAt)}

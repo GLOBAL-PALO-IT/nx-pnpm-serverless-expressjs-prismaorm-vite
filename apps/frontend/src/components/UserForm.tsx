@@ -9,7 +9,12 @@ interface UserFormProps {
   loading?: boolean;
 }
 
-export function UserForm({ user, onSubmit, onCancel, loading = false }: UserFormProps) {
+export function UserForm({
+  user,
+  onSubmit,
+  onCancel,
+  loading = false,
+}: UserFormProps) {
   const [formData, setFormData] = useState({
     email: user?.email || '',
     name: user?.name || '',
@@ -19,7 +24,7 @@ export function UserForm({ user, onSubmit, onCancel, loading = false }: UserForm
 
   const validateForm = () => {
     const newErrors: { email?: string; name?: string } = {};
-    
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -32,7 +37,7 @@ export function UserForm({ user, onSubmit, onCancel, loading = false }: UserForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -45,20 +50,20 @@ export function UserForm({ user, onSubmit, onCancel, loading = false }: UserForm
     onSubmit(submitData);
   };
 
-  const handleChange = (field: keyof typeof formData) => (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    setFormData({ ...formData, [field]: e.target.value });
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors({ ...errors, [field]: undefined });
-    }
-  };
+  const handleChange =
+    (field: keyof typeof formData) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData({ ...formData, [field]: e.target.value });
+      // Clear error when user starts typing
+      if (errors[field]) {
+        setErrors({ ...errors, [field]: undefined });
+      }
+    };
 
   return (
     <form onSubmit={handleSubmit} className={styles.userForm}>
       <h3>{user ? 'Edit User' : 'Create New User'}</h3>
-      
+
       <div className={styles.formGroup}>
         <label htmlFor="email" className={styles.label}>
           Email *

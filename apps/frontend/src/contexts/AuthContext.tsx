@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { authService } from '../services/authService';
 
 // Types
@@ -119,7 +125,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         console.log('🔄 Initializing authentication...');
         const tokens = authService.getStoredTokens();
-        
+
         // If no tokens exist, user is not authenticated
         if (!tokens?.accessToken || !tokens?.refreshToken) {
           console.log('❌ No tokens found in localStorage');
@@ -132,7 +138,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         // Check if access token is expired
         const isExpired = authService.isTokenExpired();
         console.log(`🔍 Access token expired: ${isExpired}`);
-        
+
         if (!isExpired) {
           // Access token is still valid, try to get user info
           try {
@@ -145,16 +151,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
             console.log('✅ Authentication restored successfully');
             return;
           } catch (error) {
-            console.warn('⚠️ Failed to get user with valid token, will try refresh:', error);
+            console.warn(
+              '⚠️ Failed to get user with valid token, will try refresh:',
+              error
+            );
           }
         }
-        
+
         // Access token is expired or failed, try to refresh
         try {
           console.log('Refreshing tokens on app initialization...');
-          const newTokens = await authService.refreshAccessToken(tokens.refreshToken);
+          const newTokens = await authService.refreshAccessToken(
+            tokens.refreshToken
+          );
           const user = await authService.getCurrentUser();
-          
+
           dispatch({
             type: 'AUTH_SUCCESS',
             payload: { user, tokens: newTokens },
@@ -162,11 +173,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
           console.log('Successfully restored authentication state');
           return;
         } catch (refreshError) {
-          console.warn('Token refresh failed during initialization:', refreshError);
+          console.warn(
+            'Token refresh failed during initialization:',
+            refreshError
+          );
           // Clear invalid tokens
           authService.clearTokens();
         }
-        
+
         // No valid authentication found
         dispatch({ type: 'AUTH_FAILURE' });
       } catch (error) {
@@ -222,7 +236,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Logout error:', error);
       // Continue with local logout even if server logout fails
     }
-    
+
     authService.clearTokens();
     dispatch({ type: 'LOGOUT' });
   };
@@ -233,7 +247,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
 
     try {
-      const newTokens = await authService.refreshAccessToken(state.tokens.refreshToken);
+      const newTokens = await authService.refreshAccessToken(
+        state.tokens.refreshToken
+      );
       dispatch({ type: 'UPDATE_TOKENS', payload: newTokens });
     } catch (error) {
       // If refresh fails, logout the user
@@ -252,9 +268,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>
   );
 }
 
@@ -274,14 +288,16 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
 
     if (isLoading) {
       return (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          fontSize: '1.2rem',
-          color: '#6b7280'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            fontSize: '1.2rem',
+            color: '#6b7280',
+          }}
+        >
           Loading...
         </div>
       );
@@ -289,14 +305,16 @@ export function withAuth<P extends object>(Component: React.ComponentType<P>) {
 
     if (!isAuthenticated) {
       return (
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'center', 
-          height: '100vh',
-          fontSize: '1.2rem',
-          color: '#dc2626'
-        }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            height: '100vh',
+            fontSize: '1.2rem',
+            color: '#dc2626',
+          }}
+        >
           Please log in to access this page.
         </div>
       );

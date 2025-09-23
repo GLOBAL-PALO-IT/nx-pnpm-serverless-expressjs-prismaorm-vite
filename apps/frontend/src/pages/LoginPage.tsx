@@ -37,11 +37,13 @@ export function LoginPage() {
           password: formData.password,
         });
       }
-      
+
       // Redirect to home page after successful login/register
       navigate('/');
     } catch (err: any) {
-      setError(err.message || `${isRegisterMode ? 'Registration' : 'Login'} failed`);
+      setError(
+        err.message || `${isRegisterMode ? 'Registration' : 'Login'} failed`
+      );
     } finally {
       setIsLoading(false);
     }
@@ -67,14 +69,14 @@ export function LoginPage() {
       <div className={styles.loginCard}>
         <div className={styles.header}>
           <h1>{isRegisterMode ? 'Create Account' : 'Welcome Back'}</h1>
-          <p>{isRegisterMode ? 'Sign up to get started' : 'Sign in to your account'}</p>
+          <p>
+            {isRegisterMode
+              ? 'Sign up to get started'
+              : 'Sign in to your account'}
+          </p>
         </div>
 
-        {error && (
-          <div className={styles.error}>
-            {error}
-          </div>
-        )}
+        {error && <div className={styles.error}>{error}</div>}
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {isRegisterMode && (
@@ -86,7 +88,7 @@ export function LoginPage() {
                 type="text"
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 className={styles.input}
                 placeholder="Enter your full name"
                 required={isRegisterMode}
@@ -141,15 +143,19 @@ export function LoginPage() {
               <span className={styles.spinner}>
                 {isRegisterMode ? 'Creating Account...' : 'Signing In...'}
               </span>
+            ) : isRegisterMode ? (
+              'Create Account'
             ) : (
-              isRegisterMode ? 'Create Account' : 'Sign In'
+              'Sign In'
             )}
           </button>
         </form>
 
         <div className={styles.footer}>
           <p>
-            {isRegisterMode ? 'Already have an account?' : "Don't have an account?"}{' '}
+            {isRegisterMode
+              ? 'Already have an account?'
+              : "Don't have an account?"}{' '}
             <button
               type="button"
               onClick={toggleMode}

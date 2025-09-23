@@ -11,13 +11,13 @@ interface PostListProps {
   showAuthor?: boolean;
 }
 
-export function PostList({ 
-  posts, 
-  onEdit, 
-  onDelete, 
-  onTogglePublish, 
+export function PostList({
+  posts,
+  onEdit,
+  onDelete,
+  onTogglePublish,
   loading = false,
-  showAuthor = true 
+  showAuthor = true,
 }: PostListProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -54,14 +54,16 @@ export function PostList({
 
   return (
     <div className={styles.postList}>
-      {posts.map((post) => (
+      {posts.map(post => (
         <article key={post.id} className={styles.postCard}>
           <div className={styles.postHeader}>
             <h3 className={styles.postTitle}>{post.title}</h3>
             <div className={styles.postStatus}>
-              <span className={`${styles.statusBadge} ${
-                post.published ? styles.published : styles.draft
-              }`}>
+              <span
+                className={`${styles.statusBadge} ${
+                  post.published ? styles.published : styles.draft
+                }`}
+              >
                 {post.published ? '✅ Published' : '📝 Draft'}
               </span>
             </div>

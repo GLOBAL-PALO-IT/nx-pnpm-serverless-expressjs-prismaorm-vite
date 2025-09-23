@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { User, CreateUserInput, UpdateUserInput, apiService } from '../services/api';
+import { User, CreateUserInput, UpdateUserInput } from '../services/api';
+import { userService } from '../services/userService';
 import { UserList } from '../components/UserList';
 import { UserForm } from '../components/UserForm';
 import styles from './UsersPage.module.css';
@@ -17,7 +18,7 @@ export function UsersPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiService.getUsers(true); // Include post count
+      const data = await userService.getUsers(true); // Include post count
       setUsers(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load users');
@@ -34,7 +35,7 @@ export function UsersPage() {
     try {
       setFormLoading(true);
       setError(null);
-      await apiService.createUser(data);
+      await userService.createUser(data);
       await loadUsers(); // Refresh the list
       setShowForm(false);
     } catch (err) {
@@ -46,11 +47,11 @@ export function UsersPage() {
 
   const handleUpdateUser = async (data: UpdateUserInput) => {
     if (!editingUser) return;
-    
+
     try {
       setFormLoading(true);
       setError(null);
-      await apiService.updateUser(editingUser.id, data);
+      await userService.updateUser(editingUser.id, data);
       await loadUsers(); // Refresh the list
       setEditingUser(null);
       setShowForm(false);
@@ -62,13 +63,17 @@ export function UsersPage() {
   };
 
   const handleDeleteUser = async (user: User) => {
-    if (!confirm(`Are you sure you want to delete ${user.name || user.email}? This will also delete all their posts.`)) {
+    if (
+      !confirm(
+        `Are you sure you want to delete ${user.name || user.email}? This will also delete all their posts.`
+      )
+    ) {
       return;
     }
 
     try {
       setError(null);
-      await apiService.deleteUser(user.id);
+      await userService.deleteUser(user.id);
       await loadUsers(); // Refresh the list
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete user');
@@ -92,9 +97,10 @@ export function UsersPage() {
     setEditingUser(null);
   };
 
-  const filteredUsers = users.filter(user => 
-    user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    user =>
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -107,7 +113,7 @@ export function UsersPage() {
               type="text"
               placeholder="Search users..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className={styles.searchInput}
             />
           </div>
@@ -124,10 +130,7 @@ export function UsersPage() {
       {error && (
         <div className={styles.error}>
           <p>❌ {error}</p>
-          <button 
-            onClick={() => setError(null)}
-            className={styles.errorClose}
-          >
+          <button onClick={() => setError(null)} className={styles.errorClose}>
             ✕
           </button>
         </div>

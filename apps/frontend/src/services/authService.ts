@@ -1,3 +1,5 @@
+import { BaseService } from './api';
+
 // Types
 interface User {
   id: string;
@@ -27,15 +29,15 @@ interface AuthResult {
 }
 
 // Constants
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
 
-class AuthService {
+class AuthService extends BaseService {
   private accessToken: string | null = null;
   private refreshToken: string | null = null;
 
   constructor() {
+    super();
     // Initialize tokens from localStorage on service creation
     this.loadTokensFromStorage();
   }
@@ -87,76 +89,48 @@ class AuthService {
   }
 
   /**
-   * Make authenticated API request
+   * Make authenticated API request with custom auth handling for auth endpoints
    */
-  private async makeRequest<T>(
+  private async makeAuthRequest<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
-    
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
+    // Skip auth header for login/register/refresh endpoints
+    const skipAuthEndpoints = [
+      '/auth/login',
+      '/auth/register',
+      '/auth/refresh',
+    ];
 
-    // Add authorization header if access token is available
-    // Only skip auth header for login/register/refresh endpoints
-    const skipAuthEndpoints = ['/auth/login', '/auth/register', '/auth/refresh'];
-    if (this.accessToken && !skipAuthEndpoints.includes(endpoint)) {
-      config.headers = {
-        ...config.headers,
-        Authorization: `Bearer ${this.accessToken}`,
-      };
-    }
-
-    try {
-      const response = await fetch(url, config);
+    if (skipAuthEndpoints.includes(endpoint)) {
+      // For auth endpoints, make request without automatic auth header
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers,
+        },
+        ...options,
+      });
 
       if (!response.ok) {
-        // Handle 401 Unauthorized - token might be expired
-        if (response.status === 401 && this.accessToken && !skipAuthEndpoints.includes(endpoint)) {
-          // Try to refresh token
-          try {
-            await this.refreshAccessToken(this.refreshToken!);
-            // Retry the original request with new token
-            config.headers = {
-              ...config.headers,
-              Authorization: `Bearer ${this.accessToken}`,
-            };
-            const retryResponse = await fetch(url, config);
-            if (!retryResponse.ok) {
-              throw new Error(`HTTP error! status: ${retryResponse.status}`);
-            }
-            return retryResponse.json();
-          } catch (refreshError) {
-            // If refresh fails, clear tokens and throw error
-            this.clearTokens();
-            throw new Error('Session expired. Please log in again.');
-          }
-        }
-
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          errorData.error || `HTTP error! status: ${response.status}`
+        );
       }
 
       return response.json();
-    } catch (error) {
-      if (error instanceof Error) {
-        throw error;
-      }
-      throw new Error('Network error occurred');
     }
+
+    // For non-auth endpoints, use the inherited fetchApi method
+    return this.fetchApi<T>(endpoint, options);
   }
 
   /**
    * Login user
    */
   public async login(data: LoginData): Promise<AuthResult> {
-    const result = await this.makeRequest<AuthResult>('/auth/login', {
+    const result = await this.makeAuthRequest<AuthResult>('/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -169,7 +143,7 @@ class AuthService {
    * Register user
    */
   public async register(data: RegisterData): Promise<AuthResult> {
-    const result = await this.makeRequest<AuthResult>('/auth/register', {
+    const result = await this.makeAuthRequest<AuthResult>('/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -183,7 +157,7 @@ class AuthService {
    */
   public async logout(refreshToken: string): Promise<void> {
     try {
-      await this.makeRequest('/auth/logout', {
+      await this.makeAuthRequest('/auth/logout', {
         method: 'POST',
         body: JSON.stringify({ refreshToken }),
       });
@@ -197,10 +171,13 @@ class AuthService {
    * Refresh access token
    */
   public async refreshAccessToken(refreshToken: string): Promise<AuthTokens> {
-    const response = await this.makeRequest<{ tokens: AuthTokens }>('/auth/refresh', {
-      method: 'POST',
-      body: JSON.stringify({ refreshToken }),
-    });
+    const response = await this.makeAuthRequest<{ tokens: AuthTokens }>(
+      '/auth/refresh',
+      {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken }),
+      }
+    );
 
     this.storeTokens(response.tokens);
     return response.tokens;
@@ -210,7 +187,7 @@ class AuthService {
    * Get current user info
    */
   public async getCurrentUser(): Promise<User> {
-    const response = await this.makeRequest<{ user: User }>('/auth/me');
+    const response = await this.makeAuthRequest<{ user: User }>('/auth/me');
     return response.user;
   }
 
@@ -241,7 +218,8 @@ class AuthService {
    */
   public isTokenExpired(): boolean {
     // Get fresh token from localStorage if not in memory
-    const accessToken = this.accessToken || localStorage.getItem(ACCESS_TOKEN_KEY);
+    const accessToken =
+      this.accessToken || localStorage.getItem(ACCESS_TOKEN_KEY);
     if (!accessToken) return true;
 
     try {
@@ -261,7 +239,11 @@ class AuthService {
   public setupTokenRefresh(): void {
     // Check token expiration every minute
     setInterval(async () => {
-      if (this.isAuthenticated() && this.isTokenExpired() && this.refreshToken) {
+      if (
+        this.isAuthenticated() &&
+        this.isTokenExpired() &&
+        this.refreshToken
+      ) {
         try {
           await this.refreshAccessToken(this.refreshToken);
           console.log('Token refreshed automatically');

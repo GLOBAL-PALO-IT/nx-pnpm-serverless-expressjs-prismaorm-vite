@@ -9,7 +9,12 @@ interface PostFormProps {
   loading?: boolean;
 }
 
-export function PostForm({ post, onSubmit, onCancel, loading = false }: PostFormProps) {
+export function PostForm({
+  post,
+  onSubmit,
+  onCancel,
+  loading = false,
+}: PostFormProps) {
   const [formData, setFormData] = useState({
     title: post?.title || '',
     content: post?.content || '',
@@ -20,7 +25,7 @@ export function PostForm({ post, onSubmit, onCancel, loading = false }: PostForm
 
   const validateForm = () => {
     const newErrors: { title?: string } = {};
-    
+
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
     }
@@ -31,7 +36,7 @@ export function PostForm({ post, onSubmit, onCancel, loading = false }: PostForm
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -45,25 +50,30 @@ export function PostForm({ post, onSubmit, onCancel, loading = false }: PostForm
     onSubmit(submitData);
   };
 
-  const handleChange = (field: keyof typeof formData) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
-    const value = e.target.type === 'checkbox' 
-      ? (e.target as HTMLInputElement).checked
-      : e.target.value;
-    
-    setFormData({ ...formData, [field]: value });
-    
-    // Clear error when user starts typing
-    if (errors[field as keyof typeof errors]) {
-      setErrors({ ...errors, [field]: undefined });
-    }
-  };
+  const handleChange =
+    (field: keyof typeof formData) =>
+    (
+      e: React.ChangeEvent<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >
+    ) => {
+      const value =
+        e.target.type === 'checkbox'
+          ? (e.target as HTMLInputElement).checked
+          : e.target.value;
+
+      setFormData({ ...formData, [field]: value });
+
+      // Clear error when user starts typing
+      if (errors[field as keyof typeof errors]) {
+        setErrors({ ...errors, [field]: undefined });
+      }
+    };
 
   return (
     <form onSubmit={handleSubmit} className={styles.postForm}>
       <h3>{post ? 'Edit Post' : 'Create New Post'}</h3>
-      
+
       <div className={styles.formGroup}>
         <label htmlFor="title" className={styles.label}>
           Title *
