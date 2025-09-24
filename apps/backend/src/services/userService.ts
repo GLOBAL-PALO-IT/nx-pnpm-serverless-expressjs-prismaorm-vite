@@ -64,7 +64,7 @@ export class UserService {
     try {
       // Hash a default password for admin-created users
       const defaultPassword = await bcrypt.hash('ChangeMe123!', 12);
-      
+
       return await prisma.user.create({
         data: {
           ...data,
@@ -134,7 +134,9 @@ export class UserService {
     }
   }
 
-  async getUsersWithPostCount(): Promise<(User & { _count: { posts: number } })[]> {
+  async getUsersWithPostCount(): Promise<
+    (User & { _count: { posts: number } })[]
+  > {
     return prisma.user.findMany({
       include: {
         _count: {

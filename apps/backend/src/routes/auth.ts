@@ -13,7 +13,13 @@ import {
 const router = Router();
 
 // Error handler helper
-const handleError = (res: any, error: any, defaultMessage = 'Internal server error') => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const handleError = (
+  res: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  error: any,
+  defaultMessage = 'Internal server error'
+) => {
   logger.error('API Error:', error);
   const message = error.message || defaultMessage;
   const statusCode = error.statusCode || 500;

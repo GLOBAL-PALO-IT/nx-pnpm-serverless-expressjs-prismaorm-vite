@@ -1,4 +1,8 @@
-import { APIGatewayProxyHandler, APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import {
+  APIGatewayProxyHandler,
+  APIGatewayProxyEvent,
+  APIGatewayProxyResult,
+} from 'aws-lambda';
 import serverless from 'serverless-http';
 import { app } from './app';
 
@@ -11,6 +15,6 @@ export const handler: APIGatewayProxyHandler = async (
 ) => {
   // Enable connection reuse for better performance
   context.callbackWaitsForEmptyEventLoop = false;
-  
-  return await serverlessApp(event, context) as APIGatewayProxyResult;
+
+  return (await serverlessApp(event, context)) as APIGatewayProxyResult;
 };

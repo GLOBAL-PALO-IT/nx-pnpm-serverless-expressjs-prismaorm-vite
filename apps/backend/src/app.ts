@@ -22,26 +22,26 @@ app.use((req, res, next) => {
 // Routes
 app.get('/', (req, res) => {
   logger.info('Root endpoint accessed');
-  res.json({ 
+  res.json({
     message: 'Hello from Nx Serverless Backend!',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
 app.get('/health', (req, res) => {
   logger.info('Health check endpoint accessed');
-  res.json({ 
+  res.json({
     status: 'healthy',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 // API routes will be added here
 app.get('/api/test', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'API endpoint working!',
-    data: { test: true }
+    data: { test: true },
   });
 });
 

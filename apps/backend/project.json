@@ -128,6 +128,25 @@
         "command": "tsx prisma/seed.ts",
         "cwd": "apps/backend"
       }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/backend/**/*.{ts,tsx,js,jsx}"],
+        "eslintConfig": ".eslintrc.json",
+        "ignorePath": ".eslintignore"
+      }
+    },
+    "lint:fix": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["apps/backend/**/*.{ts,tsx,js,jsx}"],
+        "eslintConfig": ".eslintrc.json",
+        "ignorePath": ".eslintignore",
+        "fix": true
+      }
     }
   },
   "tags": []

@@ -55,11 +55,14 @@ export abstract class BaseService {
     this.baseUrl = baseUrl;
   }
 
-  protected async fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  protected async fetchApi<T>(
+    endpoint: string,
+    options?: RequestInit
+  ): Promise<T> {
     // Import authService dynamically to avoid circular dependency
     const { authService } = await import('./authService');
     const accessToken = authService.getAccessToken();
-    
+
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       headers: {
         'Content-Type': 'application/json',
@@ -76,12 +79,14 @@ export abstract class BaseService {
         if (refreshToken) {
           await authService.refreshAccessToken(refreshToken);
           const newAccessToken = authService.getAccessToken();
-          
+
           // Retry the request with new token
           const retryResponse = await fetch(`${this.baseUrl}${endpoint}`, {
             headers: {
               'Content-Type': 'application/json',
-              ...(newAccessToken && { Authorization: `Bearer ${newAccessToken}` }),
+              ...(newAccessToken && {
+                Authorization: `Bearer ${newAccessToken}`,
+              }),
               ...options?.headers,
             },
             ...options,
@@ -89,7 +94,9 @@ export abstract class BaseService {
 
           if (!retryResponse.ok) {
             const errorData = await retryResponse.json().catch(() => ({}));
-            throw new Error(errorData.error || `API Error: ${retryResponse.statusText}`);
+            throw new Error(
+              errorData.error || `API Error: ${retryResponse.statusText}`
+            );
           }
 
           // Handle 204 No Content responses
@@ -99,7 +106,7 @@ export abstract class BaseService {
 
           return retryResponse.json();
         }
-      } catch (refreshError) {
+      } catch {
         // If refresh fails, clear tokens and redirect to login
         authService.clearTokens();
         window.location.href = '/login';
@@ -118,5 +125,5 @@ export abstract class BaseService {
     }
 
     return response.json();
-  } 
+  }
 }

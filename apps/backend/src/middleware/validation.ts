@@ -17,7 +17,7 @@ interface ValidationErrorResponse {
 const formatZodError = (error: ZodError): ValidationErrorResponse => {
   return {
     error: 'Validation failed',
-    details: error.issues.map((err) => ({
+    details: error.issues.map(err => ({
       field: err.path.join('.'),
       message: err.message,
     })),
@@ -32,7 +32,7 @@ export const validate = (
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       let dataToValidate;
-      
+
       switch (target) {
         case 'body':
           dataToValidate = req.body;
@@ -48,7 +48,7 @@ export const validate = (
       }
 
       const validatedData = schema.parse(dataToValidate);
-      
+
       // Attach validated data to request object
       switch (target) {
         case 'body':
@@ -67,20 +67,23 @@ export const validate = (
       if (error instanceof ZodError) {
         return res.status(400).json(formatZodError(error));
       }
-      
+
       // Handle unexpected errors
       console.error('Validation middleware error:', error);
-      return res.status(500).json({ 
-        error: 'Internal server error during validation' 
+      return res.status(500).json({
+        error: 'Internal server error during validation',
       });
     }
   };
 };
 
 // Convenience functions for common validation patterns
-export const validateBody = (schema: z.ZodSchema<any>) => validate(schema, 'body');
-export const validateParams = (schema: z.ZodSchema<any>) => validate(schema, 'params');
-export const validateQuery = (schema: z.ZodSchema<any>) => validate(schema, 'query');
+export const validateBody = (schema: z.ZodSchema<any>) =>
+  validate(schema, 'body');
+export const validateParams = (schema: z.ZodSchema<any>) =>
+  validate(schema, 'params');
+export const validateQuery = (schema: z.ZodSchema<any>) =>
+  validate(schema, 'query');
 
 // Multiple validation middleware (for validating multiple targets at once)
 export const validateMultiple = (validations: {
@@ -98,10 +101,12 @@ export const validateMultiple = (validations: {
           req.body = validations.body.parse(req.body);
         } catch (error) {
           if (error instanceof ZodError) {
-            errors.push(...formatZodError(error).details.map(detail => ({
-              ...detail,
-              field: `body.${detail.field}`
-            })));
+            errors.push(
+              ...formatZodError(error).details.map(detail => ({
+                ...detail,
+                field: `body.${detail.field}`,
+              }))
+            );
           }
         }
       }
@@ -112,10 +117,12 @@ export const validateMultiple = (validations: {
           req.params = validations.params.parse(req.params);
         } catch (error) {
           if (error instanceof ZodError) {
-            errors.push(...formatZodError(error).details.map(detail => ({
-              ...detail,
-              field: `params.${detail.field}`
-            })));
+            errors.push(
+              ...formatZodError(error).details.map(detail => ({
+                ...detail,
+                field: `params.${detail.field}`,
+              }))
+            );
           }
         }
       }
@@ -126,10 +133,12 @@ export const validateMultiple = (validations: {
           req.query = validations.query.parse(req.query);
         } catch (error) {
           if (error instanceof ZodError) {
-            errors.push(...formatZodError(error).details.map(detail => ({
-              ...detail,
-              field: `query.${detail.field}`
-            })));
+            errors.push(
+              ...formatZodError(error).details.map(detail => ({
+                ...detail,
+                field: `query.${detail.field}`,
+              }))
+            );
           }
         }
       }
@@ -138,15 +147,15 @@ export const validateMultiple = (validations: {
       if (errors.length > 0) {
         return res.status(400).json({
           error: 'Validation failed',
-          details: errors
+          details: errors,
         });
       }
 
       next();
     } catch (error) {
       console.error('Multiple validation middleware error:', error);
-      return res.status(500).json({ 
-        error: 'Internal server error during validation' 
+      return res.status(500).json({
+        error: 'Internal server error during validation',
       });
     }
   };

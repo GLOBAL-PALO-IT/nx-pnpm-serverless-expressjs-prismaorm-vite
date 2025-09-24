@@ -1,0 +1,7 @@
+node_modules
+dist
+.esbuild
+**/.esbuild/**
+**/build/**
+coverage
+.nx

@@ -13,14 +13,21 @@ export const PostSchema = z.object({
 
 // Schema for creating a post (authorId will be set from authenticated user)
 export const CreatePostSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters'),
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be less than 200 characters'),
   content: z.string().optional(),
   published: z.boolean().default(false).optional(),
 });
 
 // Schema for updating a post
 export const UpdatePostSchema = z.object({
-  title: z.string().min(1, 'Title is required').max(200, 'Title must be less than 200 characters').optional(),
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(200, 'Title must be less than 200 characters')
+    .optional(),
   content: z.string().optional(),
   published: z.boolean().optional(),
 });
@@ -37,10 +44,13 @@ export const AuthorIdSchema = z.object({
 
 // Schema for post query parameters
 export const PostQuerySchema = z.object({
-  published: z.string().optional().transform((val) => {
-    if (val === undefined) return undefined;
-    return val === 'true';
-  }),
+  published: z
+    .string()
+    .optional()
+    .transform(val => {
+      if (val === undefined) return undefined;
+      return val === 'true';
+    }),
   search: z.string().optional(),
 });
 

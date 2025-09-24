@@ -33,7 +33,10 @@ export const UserEmailSchema = z.object({
 
 // Schema for user query parameters
 export const UserQuerySchema = z.object({
-  includePostCount: z.string().optional().transform((val) => val === 'true'),
+  includePostCount: z
+    .string()
+    .optional()
+    .transform(val => val === 'true'),
 });
 
 // Type exports for TypeScript

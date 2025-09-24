@@ -8,7 +8,8 @@ const prisma = new PrismaClient();
 
 // JWT secrets from environment variables
 const JWT_ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'access-secret-key';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'refresh-secret-key';
+const JWT_REFRESH_SECRET =
+  process.env.JWT_REFRESH_SECRET || 'refresh-secret-key';
 const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN || '15m';
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '7d';
 
@@ -45,14 +46,20 @@ export class AuthService {
   /**
    * Compare password with hash
    */
-  private async comparePassword(password: string, hash: string): Promise<boolean> {
+  private async comparePassword(
+    password: string,
+    hash: string
+  ): Promise<boolean> {
     return bcrypt.compare(password, hash);
   }
 
   /**
    * Generate JWT access token
    */
-  private generateAccessToken(payload: { userId: string; email: string }): string {
+  private generateAccessToken(payload: {
+    userId: string;
+    email: string;
+  }): string {
     return jwt.sign(payload, JWT_ACCESS_SECRET, {
       expiresIn: ACCESS_TOKEN_EXPIRES_IN,
     } as jwt.SignOptions);
@@ -61,7 +68,10 @@ export class AuthService {
   /**
    * Generate JWT refresh token
    */
-  private generateRefreshToken(payload: { userId: string; email: string }): string {
+  private generateRefreshToken(payload: {
+    userId: string;
+    email: string;
+  }): string {
     return jwt.sign(payload, JWT_REFRESH_SECRET, {
       expiresIn: REFRESH_TOKEN_EXPIRES_IN,
     } as jwt.SignOptions);
@@ -166,16 +176,19 @@ export class AuthService {
   public async login(data: LoginData): Promise<AuthResult> {
     try {
       // Find user by email
-      const user = await prisma.user.findUnique({
+      const user = (await prisma.user.findUnique({
         where: { email: data.email },
-      }) as any;
+      })) as any;
 
       if (!user) {
         throw new Error('Invalid email or password');
       }
 
       // Verify password
-      const isPasswordValid = await this.comparePassword(data.password, user.password);
+      const isPasswordValid = await this.comparePassword(
+        data.password,
+        user.password
+      );
 
       if (!isPasswordValid) {
         throw new Error('Invalid email or password');
@@ -219,9 +232,9 @@ export class AuthService {
       }
 
       // Find user and verify refresh token matches
-      const user = await prisma.user.findUnique({
+      const user = (await prisma.user.findUnique({
         where: { id: decoded.userId },
-      }) as any;
+      })) as any;
 
       if (!user || user.refreshToken !== refreshToken) {
         throw new Error('Invalid refresh token');
@@ -303,9 +316,9 @@ export class AuthService {
   ): Promise<void> {
     try {
       // Find user
-      const user = await prisma.user.findUnique({
+      const user = (await prisma.user.findUnique({
         where: { id: userId },
-      }) as any;
+      })) as any;
 
       if (!user) {
         throw new Error('User not found');

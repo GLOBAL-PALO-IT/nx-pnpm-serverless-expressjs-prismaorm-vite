@@ -2,6 +2,25 @@
 
 A modern full-stack TypeScript monorepo built with Nx, featuring a React frontend and Express.js serverless backend.
 
+## 🚀 Quick Start
+
+```bash
+# Install dependencies
+pnpm install
+
+# Start development servers
+pnpm dev:backend    # Backend API (http://localhost:3000)
+pnpm dev:frontend   # Frontend app (http://localhost:4200)
+
+# Lint your code
+pnpm lint          # Lint both backend and frontend
+pnpm lint:fix      # Lint and auto-fix issues
+
+# Build for production
+pnpm build:backend
+pnpm build:frontend
+```
+
 ## 🚀 Features
 
 - **Nx Monorepo**: Efficient workspace management with powerful CLI tools
@@ -23,19 +42,30 @@ nx-serverless/
 │   │   │   ├── lambda.ts     # AWS Lambda handler
 │   │   │   ├── main.ts       # Local development server
 │   │   │   ├── libs/         # Database and utility libraries
+│   │   │   ├── middleware/   # Auth and validation middleware
+│   │   │   ├── routes/       # API route handlers
+│   │   │   ├── schemas/      # Zod validation schemas
 │   │   │   └── services/     # Business logic and services
 │   │   ├── prisma/           # Database schema and migrations
 │   │   └── serverless.yml    # Serverless Framework configuration
 │   ├── frontend/             # React frontend application
 │   │   ├── src/
 │   │   │   ├── app/          # Main app component
+│   │   │   ├── components/   # Reusable React components
+│   │   │   ├── contexts/     # React contexts (Auth, etc.)
+│   │   │   ├── pages/        # Page components
 │   │   │   ├── services/     # API client and services
 │   │   │   └── main.tsx      # Application entry point
 │   │   └── vite.config.ts    # Vite configuration
-│   └── frontend-e2e/         # End-to-end tests
-├── libs/                     # Shared libraries (future use)
+│   └── frontend-e2e/         # End-to-end tests with Cypress
+├── packages/                 # Shared packages (future use)
 ├── tools/                    # Custom tools and scripts
-└── package.json              # Workspace dependencies
+├── tmp/                      # Temporary build files
+├── .eslintrc.json           # ESLint configuration
+├── jest.config.ts           # Jest configuration
+├── nx.json                  # Nx workspace configuration
+├── pnpm-workspace.yaml      # pnpm workspace configuration
+└── package.json             # Workspace dependencies and scripts
 ```
 
 ## 🛠️ Prerequisites
@@ -171,10 +201,31 @@ pnpm db:studio
 pnpm dev:backend
 
 # Or start backend in serverless mode
-nx run backend:serve:serverless
+pnpm dev:backend:serverless
 
 # In another terminal, start frontend (React app)
 pnpm dev:frontend
+```
+
+### Code Quality
+
+```bash
+# Lint both backend and frontend
+pnpm lint
+
+# Lint individual projects
+pnpm lint:backend                  
+pnpm lint:frontend                 
+pnpm lint:all                     # All projects including e2e
+
+# Auto-fix linting issues
+pnpm lint:fix                     # Both backend and frontend
+pnpm lint:fix:backend             # Backend only
+pnpm lint:fix:frontend            # Frontend only
+
+# Format code
+pnpm format                       # Format all files
+pnpm format:check                 # Check if files are formatted
 ```
 
 ### Individual Commands
@@ -207,8 +258,15 @@ pnpm test:frontend                 # Test frontend only
 # or: nx test backend / nx test frontend
 
 # Run linting
-nx lint backend
-nx lint frontend
+pnpm lint                          # Lint both backend and frontend
+pnpm lint:backend                  # Lint backend only
+pnpm lint:frontend                 # Lint frontend only
+pnpm lint:all                      # Lint all projects (including e2e)
+
+# Run linting with auto-fix
+pnpm lint:fix                      # Lint and fix both backend and frontend
+pnpm lint:fix:backend              # Lint and fix backend only
+pnpm lint:fix:frontend             # Lint and fix frontend only
 
 # Format code
 pnpm format
@@ -340,9 +398,15 @@ pnpm test:backend    # Test backend only
 pnpm test:frontend   # Test frontend only
 
 # Linting & Formatting
-pnpm lint            # Lint all projects
-pnpm format          # Format all files
-pnpm format:check    # Check formatting
+pnpm lint                 # Lint both backend and frontend
+pnpm lint:backend         # Lint backend only  
+pnpm lint:frontend        # Lint frontend only
+pnpm lint:all            # Lint all projects (including e2e)
+pnpm lint:fix            # Lint and auto-fix both backend and frontend
+pnpm lint:fix:backend    # Lint and auto-fix backend only
+pnpm lint:fix:frontend   # Lint and auto-fix frontend only
+pnpm format              # Format all files
+pnpm format:check        # Check formatting
 
 # Database
 pnpm db:generate     # Generate Prisma client

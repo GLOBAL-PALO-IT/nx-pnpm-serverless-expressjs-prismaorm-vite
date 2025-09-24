@@ -1,12 +1,18 @@
 /**
  * Examples of how to use Zod validation in your routes
- * 
+ *
  * This file demonstrates various validation patterns and use cases.
  * Remove this file after you've reviewed the examples.
  */
 
 import { z } from 'zod';
-import { validateBody, validateParams, validateQuery, validateMultiple } from '../middleware/validation';
+// Note: These imports are for examples only
+// import {
+//   validateBody,
+//   validateParams,
+//   validateQuery,
+//   validateMultiple,
+// } from '../middleware/validation';
 
 // ===== BASIC VALIDATION EXAMPLES =====
 
@@ -27,9 +33,18 @@ const IdParamSchema = z.object({
 
 // 3. Query parameter validation
 const UserQuerySchema = z.object({
-  page: z.string().optional().transform(val => val ? parseInt(val) : 1),
-  limit: z.string().optional().transform(val => val ? parseInt(val) : 10),
-  active: z.string().optional().transform(val => val === 'true'),
+  page: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseInt(val) : 1)),
+  limit: z
+    .string()
+    .optional()
+    .transform(val => (val ? parseInt(val) : 10)),
+  active: z
+    .string()
+    .optional()
+    .transform(val => val === 'true'),
 });
 
 // Usage: app.get('/users', validateQuery(UserQuerySchema), handler);
@@ -43,7 +58,7 @@ const UpdateUserSchema = z.object({
 });
 
 // Usage:
-// app.put('/users/:id', 
+// app.put('/users/:id',
 //   validateMultiple({
 //     params: IdParamSchema,
 //     body: UpdateUserSchema
@@ -54,36 +69,42 @@ const UpdateUserSchema = z.object({
 // ===== COMPLEX VALIDATION PATTERNS =====
 
 // 5. Conditional validation
-const PostSchema = z.object({
-  title: z.string().min(1, 'Title is required'),
-  content: z.string().optional(),
-  published: z.boolean().default(false),
-  publishedAt: z.string().datetime().optional(),
-}).refine(
-  (data) => !data.published || data.publishedAt,
-  {
-    message: "Published posts must have a publishedAt date",
-    path: ["publishedAt"],
-  }
-);
+const PostSchema = z
+  .object({
+    title: z.string().min(1, 'Title is required'),
+    content: z.string().optional(),
+    published: z.boolean().default(false),
+    publishedAt: z.string().datetime().optional(),
+  })
+  .refine(data => !data.published || data.publishedAt, {
+    message: 'Published posts must have a publishedAt date',
+    path: ['publishedAt'],
+  });
 
 // 6. Array validation
 const BulkCreateUsersSchema = z.object({
-  users: z.array(z.object({
-    name: z.string().min(1),
-    email: z.string().email(),
-  })).min(1, 'At least one user is required').max(100, 'Maximum 100 users allowed'),
+  users: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        email: z.string().email(),
+      })
+    )
+    .min(1, 'At least one user is required')
+    .max(100, 'Maximum 100 users allowed'),
 });
 
 // 7. Nested object validation
 const UserWithAddressSchema = z.object({
   name: z.string().min(1),
   email: z.string().email(),
-  address: z.object({
-    street: z.string().min(1),
-    city: z.string().min(1),
-    zipCode: z.string().regex(/^\d{5}$/, 'Invalid zip code format'),
-  }).optional(),
+  address: z
+    .object({
+      street: z.string().min(1),
+      city: z.string().min(1),
+      zipCode: z.string().regex(/^\d{5}$/, 'Invalid zip code format'),
+    })
+    .optional(),
 });
 
 // ===== CUSTOM VALIDATION HELPERS =====
@@ -101,12 +122,14 @@ const UserWithAgeSchema = z.object({
 
 // 9. Transform and preprocess data
 const SearchQuerySchema = z.object({
-  query: z.string()
+  query: z
+    .string()
     .min(1, 'Search query cannot be empty')
     .transform(val => val.trim().toLowerCase()),
-  tags: z.string()
+  tags: z
+    .string()
     .optional()
-    .transform(val => val ? val.split(',').map(tag => tag.trim()) : []),
+    .transform(val => (val ? val.split(',').map(tag => tag.trim()) : [])),
 });
 
 // ===== ERROR HANDLING EXAMPLES =====
@@ -129,9 +152,9 @@ const SearchQuerySchema = z.object({
 // ===== TYPESCRIPT INTEGRATION =====
 
 // Extract TypeScript types from Zod schemas
-type SimpleUser = z.infer<typeof SimpleUserSchema>;
-type UpdateUser = z.infer<typeof UpdateUserSchema>;
-type SearchQuery = z.infer<typeof SearchQuerySchema>;
+// type SimpleUser = z.infer<typeof SimpleUserSchema>;
+// type UpdateUser = z.infer<typeof UpdateUserSchema>;
+// type SearchQuery = z.infer<typeof SearchQuerySchema>;
 
 // Use in your route handlers:
 // app.post('/users', validateBody(SimpleUserSchema), (req, res) => {

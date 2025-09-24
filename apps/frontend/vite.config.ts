@@ -15,7 +15,7 @@ export default defineConfig(() => ({
         target: process.env.BACKEND_URL || 'http://localhost:3000',
         changeOrigin: true,
         secure: process.env.NODE_ENV === 'production' ? true : false,
-        rewrite: (path) => path.replace(/^\/api/, ''),
+        rewrite: path => path.replace(/^\/api/, ''),
       },
     },
   },

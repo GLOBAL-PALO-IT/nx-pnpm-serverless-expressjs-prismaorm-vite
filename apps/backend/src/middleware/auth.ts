@@ -4,6 +4,7 @@ import { logger } from '../libs/logger';
 
 // Extend Express Request interface to include user
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: {
@@ -104,7 +105,11 @@ export const optionalAuthentication = async (
 /**
  * Middleware to check if user is authenticated (for routes that require authentication)
  */
-export const requireAuth = (req: Request, res: Response, next: NextFunction): void => {
+export const requireAuth = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
   if (!req.user) {
     res.status(401).json({ error: 'Authentication required' });
     return;
@@ -135,7 +140,9 @@ export const requireOwnership = (userIdParam: string = 'id') => {
     const resourceUserId = req.params[userIdParam];
 
     if (req.user.id !== resourceUserId) {
-      res.status(403).json({ error: 'Access denied: You can only access your own resources' });
+      res.status(403).json({
+        error: 'Access denied: You can only access your own resources',
+      });
       return;
     }
 

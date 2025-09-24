@@ -32,23 +32,17 @@ export const RegisterSchema = z.object({
 
 // Refresh token schema
 export const RefreshTokenSchema = z.object({
-  refreshToken: z
-    .string()
-    .min(1, 'Refresh token is required'),
+  refreshToken: z.string().min(1, 'Refresh token is required'),
 });
 
 // Logout schema
 export const LogoutSchema = z.object({
-  refreshToken: z
-    .string()
-    .min(1, 'Refresh token is required'),
+  refreshToken: z.string().min(1, 'Refresh token is required'),
 });
 
 // Password change schema (for future use)
 export const ChangePasswordSchema = z.object({
-  currentPassword: z
-    .string()
-    .min(1, 'Current password is required'),
+  currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z
     .string()
     .min(1, 'New password is required')

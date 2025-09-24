@@ -57,7 +57,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'Getting Started with Prisma',
-        content: 'Prisma is an amazing ORM that makes database operations simple and type-safe. In this post, I\'ll share my experience setting up Prisma in a serverless environment.',
+        content:
+          "Prisma is an amazing ORM that makes database operations simple and type-safe. In this post, I'll share my experience setting up Prisma in a serverless environment.",
         published: true,
         authorId: users[0].id,
       },
@@ -65,7 +66,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'Building Scalable APIs',
-        content: 'When building APIs that need to scale, there are several key considerations: performance, maintainability, and developer experience.',
+        content:
+          'When building APIs that need to scale, there are several key considerations: performance, maintainability, and developer experience.',
         published: true,
         authorId: users[0].id,
       },
@@ -73,7 +75,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'Draft: TypeScript Best Practices',
-        content: 'This is a draft post about TypeScript best practices. Still working on the content...',
+        content:
+          'This is a draft post about TypeScript best practices. Still working on the content...',
         published: false,
         authorId: users[0].id,
       },
@@ -83,7 +86,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'Serverless Architecture Patterns',
-        content: 'Serverless computing has revolutionized how we build and deploy applications. Here are some common patterns I\'ve discovered while working with serverless architectures.',
+        content:
+          "Serverless computing has revolutionized how we build and deploy applications. Here are some common patterns I've discovered while working with serverless architectures.",
         published: true,
         authorId: users[1].id,
       },
@@ -91,7 +95,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'Database Design for Modern Apps',
-        content: 'Designing databases for modern applications requires careful consideration of scalability, performance, and maintainability.',
+        content:
+          'Designing databases for modern applications requires careful consideration of scalability, performance, and maintainability.',
         published: true,
         authorId: users[1].id,
       },
@@ -101,7 +106,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'React Hooks Deep Dive',
-        content: 'React Hooks have transformed how we write React components. Let\'s explore some advanced patterns and best practices.',
+        content:
+          "React Hooks have transformed how we write React components. Let's explore some advanced patterns and best practices.",
         published: true,
         authorId: users[2].id,
       },
@@ -109,7 +115,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'State Management in 2025',
-        content: 'The landscape of state management in React has evolved significantly. Here\'s what you need to know about the current options.',
+        content:
+          "The landscape of state management in React has evolved significantly. Here's what you need to know about the current options.",
         published: true,
         authorId: users[2].id,
       },
@@ -117,7 +124,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'Draft: Performance Optimization',
-        content: 'Working on a comprehensive guide to performance optimization...',
+        content:
+          'Working on a comprehensive guide to performance optimization...',
         published: false,
         authorId: users[2].id,
       },
@@ -127,7 +135,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'DevOps for Frontend Developers',
-        content: 'As a frontend developer, understanding DevOps practices can significantly improve your workflow and application reliability.',
+        content:
+          'As a frontend developer, understanding DevOps practices can significantly improve your workflow and application reliability.',
         published: true,
         authorId: users[3].id,
       },
@@ -135,7 +144,8 @@ async function main() {
     prisma.post.create({
       data: {
         title: 'Testing Strategies for Full-Stack Apps',
-        content: 'Comprehensive testing is crucial for maintaining code quality. Here are strategies for testing both frontend and backend components.',
+        content:
+          'Comprehensive testing is crucial for maintaining code quality. Here are strategies for testing both frontend and backend components.',
         published: true,
         authorId: users[3].id,
       },
@@ -163,7 +173,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('❌ Seed failed:', e);
     process.exit(1);
   })
