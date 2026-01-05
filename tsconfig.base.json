@@ -14,7 +14,12 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@nx-serverless/data": ["packages/data/src/index.ts"],
+      "@nx-serverless/services": ["packages/services/src/index.ts"],
+      "@nx-serverless/types": ["packages/types/src/index.ts"],
+      "@nx-serverless/ui": ["packages/ui/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

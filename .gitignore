@@ -53,6 +53,9 @@ Thumbs.db
 # TypeScript
 *.tsbuildinfo
 
+# TanStack Router
+**/routeTree.gen.ts
+
 # AWS
 .aws-sam/
 samconfig.toml

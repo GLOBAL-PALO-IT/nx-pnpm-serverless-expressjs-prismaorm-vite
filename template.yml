@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  nx-serverless-backend
+  
+  SAM Template for Nx Serverless Backend using @vendia/serverless-express
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: nodejs20.x
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        NODE_ENV: !Ref Environment
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - staging
+      - prod
+    Description: Environment name
+  
+  DatabaseUrl:
+    Type: String
+    NoEcho: true
+    Description: Database URL for Prisma
+    Default: ""
+
+Resources:
+  # Lambda Function
+  BackendFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "nx-serverless-backend-${Environment}"
+      CodeUri: dist/apps/backend/
+      Handler: lambda.handler
+      Description: Nx Serverless Backend with Express and Prisma
+      Environment:
+        Variables:
+          DATABASE_URL: !Ref DatabaseUrl
+          NODE_ENV: !Ref Environment
+      Events:
+        # Catch all API Gateway requests
+        ApiRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref BackendApi
+            Path: /
+            Method: ANY
+        ApiProxy:
+          Type: Api
+          Properties:
+            RestApiId: !Ref BackendApi
+            Path: /{proxy+}
+            Method: ANY
+      # Policies for Lambda execution
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        # Add additional policies as needed for your application
+        # - VPCAccessPolicy # If your Lambda needs VPC access for RDS
+        # - S3ReadPolicy:
+        #     BucketName: !Ref MyBucket
+
+  # API Gateway
+  BackendApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "nx-serverless-api-${Environment}"
+      StageName: !Ref Environment
+      EndpointConfiguration:
+        Type: REGIONAL
+      Cors:
+        AllowMethods: "'GET,POST,PUT,DELETE,PATCH,OPTIONS'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: "'*'"
+        MaxAge: "'600'"
+      # Enable API Gateway access logging
+      AccessLogSetting:
+        DestinationArn: !GetAtt ApiGatewayLogGroup.Arn
+        Format: >
+          $context.requestId $context.requestTime $context.httpMethod 
+          $context.resourcePath $context.status $context.responseLength 
+          $context.error.message $context.error.messageString
+      # Enable X-Ray tracing
+      TracingConfig:
+        PassthroughBehavior: Active
+
+  # CloudWatch Log Group for API Gateway
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/apigateway/nx-serverless-api-${Environment}"
+      RetentionInDays: 14
+
+  # CloudWatch Log Group for Lambda
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/nx-serverless-backend-${Environment}"
+      RetentionInDays: 14
+
+  # Optional: DynamoDB table for sessions or caching
+  # SessionTable:
+  #   Type: AWS::DynamoDB::Table
+  #   Properties:
+  #     TableName: !Sub "nx-serverless-sessions-${Environment}"
+  #     BillingMode: PAY_PER_REQUEST
+  #     AttributeDefinitions:
+  #       - AttributeName: sessionId
+  #         AttributeType: S
+  #     KeySchema:
+  #       - AttributeName: sessionId
+  #         KeyType: HASH
+  #     TimeToLiveSpecification:
+  #       AttributeName: ttl
+  #       Enabled: true
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  BackendApi:
+    Description: "API Gateway endpoint URL for Backend function"
+    Value: !Sub "https://${BackendApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}/"
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiUrl"
+
+  BackendFunction:
+    Description: "Backend Lambda Function ARN"
+    Value: !GetAtt BackendFunction.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-FunctionArn"
+
+  BackendFunctionIamRole:
+    Description: "Implicit IAM Role created for Backend function"
+    Value: !GetAtt BackendFunctionRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-FunctionRole"

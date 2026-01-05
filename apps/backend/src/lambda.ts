@@ -1,20 +1,13 @@
-import {
-  APIGatewayProxyHandler,
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-} from 'aws-lambda';
-import serverless from 'serverless-http';
+// These types are available for future use if needed
+// import type {
+//   APIGatewayProxyEvent,
+//   APIGatewayProxyResult,
+//   Context,
+// } from 'aws-lambda';
+import serverlessExpress from '@vendia/serverless-express';
 import { app } from './app';
 
-// Wrap the Express app for serverless
-const serverlessApp = serverless(app);
-
-export const handler: APIGatewayProxyHandler = async (
-  event: APIGatewayProxyEvent,
-  context
-) => {
-  // Enable connection reuse for better performance
-  context.callbackWaitsForEmptyEventLoop = false;
-
-  return (await serverlessApp(event, context)) as APIGatewayProxyResult;
-};
+// Create and export the serverless express handler
+export const handler = serverlessExpress({
+  app,
+});

@@ -1,0 +1,65 @@
+{
+  "name": "types",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/types/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/types",
+        "main": "packages/types/src/index.ts",
+        "tsConfig": "packages/types/tsconfig.lib.json",
+        "assets": ["packages/types/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/types/**/*.{ts,tsx,js,jsx}"],
+        "eslintConfig": ".eslintrc.json",
+        "ignorePath": ".eslintignore"
+      }
+    },
+    "lint:fix": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/types/**/*.{ts,tsx,js,jsx}"],
+        "eslintConfig": ".eslintrc.json",
+        "ignorePath": ".eslintignore",
+        "fix": true
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write 'packages/types/**/*.{ts,tsx,js,jsx,json,md}'"
+      }
+    },
+    "format:check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --check 'packages/types/**/*.{ts,tsx,js,jsx,json,md}'"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/types/jest.config.ts"
+      }
+    },
+    "test:coverage": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/types/jest.config.ts",
+        "coverage": true
+      }
+    }
+  },
+  "tags": ["scope:types", "type:library"]
+}

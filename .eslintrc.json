@@ -94,8 +94,23 @@
       "files": ["*.js", "*.jsx"],
       "extends": ["eslint:recommended"],
       "plugins": ["prettier"],
+      "env": {
+        "node": true,
+        "commonjs": true,
+        "es2022": true
+      },
       "rules": {
         "prettier/prettier": "error"
+      }
+    },
+    {
+      "files": ["*.config.js", "*.config.ts"],
+      "env": {
+        "node": true,
+        "commonjs": true
+      },
+      "rules": {
+        "no-undef": "off"
       }
     }
   ]

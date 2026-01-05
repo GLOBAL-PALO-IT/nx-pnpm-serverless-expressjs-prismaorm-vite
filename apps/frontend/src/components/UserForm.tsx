@@ -1,6 +1,15 @@
 import React, { useState } from 'react';
 import { User, CreateUserInput, UpdateUserInput } from '../services/api';
-import styles from './UserForm.module.css';
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  Input,
+  Label,
+} from '@nx-serverless/ui';
 
 interface UserFormProps {
   user?: User;
@@ -61,60 +70,61 @@ export function UserForm({
     };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.userForm}>
-      <h3>{user ? 'Edit User' : 'Create New User'}</h3>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{user ? 'Edit User' : 'Create New User'}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">
+              Email <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              type="email"
+              id="email"
+              value={formData.email}
+              onChange={handleChange('email')}
+              className={errors.email ? 'border-destructive' : ''}
+              disabled={loading}
+              required
+            />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email}</p>
+            )}
+          </div>
 
-      <div className={styles.formGroup}>
-        <label htmlFor="email" className={styles.label}>
-          Email *
-        </label>
-        <input
-          type="email"
-          id="email"
-          value={formData.email}
-          onChange={handleChange('email')}
-          className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
-          disabled={loading}
-          required
-        />
-        {errors.email && <span className={styles.error}>{errors.email}</span>}
-      </div>
-
-      <div className={styles.formGroup}>
-        <label htmlFor="name" className={styles.label}>
-          Name
-        </label>
-        <input
-          type="text"
-          id="name"
-          value={formData.name}
-          onChange={handleChange('name')}
-          className={styles.input}
-          disabled={loading}
-          placeholder="Optional"
-        />
-        {errors.name && <span className={styles.error}>{errors.name}</span>}
-      </div>
-
-      <div className={styles.formActions}>
-        <button
-          type="submit"
-          className={`${styles.button} ${styles.buttonPrimary}`}
-          disabled={loading}
-        >
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              type="text"
+              id="name"
+              value={formData.name}
+              onChange={handleChange('name')}
+              disabled={loading}
+              placeholder="Optional"
+            />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name}</p>
+            )}
+          </div>
+        </form>
+      </CardContent>
+      <CardFooter className="flex gap-2">
+        <Button type="submit" onClick={handleSubmit} disabled={loading}>
           {loading ? 'Saving...' : user ? 'Update User' : 'Create User'}
-        </button>
+        </Button>
         {onCancel && (
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onCancel}
-            className={`${styles.button} ${styles.buttonSecondary}`}
             disabled={loading}
           >
             Cancel
-          </button>
+          </Button>
         )}
-      </div>
-    </form>
+      </CardFooter>
+    </Card>
   );
 }

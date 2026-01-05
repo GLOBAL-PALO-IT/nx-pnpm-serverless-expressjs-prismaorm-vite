@@ -13,7 +13,7 @@
         "outputPath": "dist/apps/backend",
         "format": ["cjs"],
         "bundle": false,
-        "main": "apps/backend/src/main.ts",
+        "main": "apps/backend/src/lambda.ts",
         "tsConfig": "apps/backend/tsconfig.app.json",
         "assets": ["apps/backend/src/assets"],
         "generatePackageJson": true,
@@ -22,7 +22,9 @@
           "outExtension": {
             ".js": ".js"
           },
-          "external": ["@prisma/client"]
+          "external": ["@prisma/client"],
+          "target": "node20",
+          "platform": "node"
         }
       },
       "configurations": {
@@ -34,99 +36,175 @@
               ".js": ".js"
             }
           }
+        },
+        "serve": {
+          "main": "apps/backend/src/main.ts",
+          "esbuildOptions": {
+            "sourcemap": true,
+            "outExtension": {
+              ".js": ".js"
+            }
+          }
         }
       }
     },
-    "prune-lockfile": {
-      "dependsOn": ["build"],
-      "cache": true,
-      "executor": "@nx/js:prune-lockfile",
-      "outputs": [
-        "{workspaceRoot}/dist/apps/backend/package.json",
-        "{workspaceRoot}/dist/apps/backend/pnpm-lock.yaml"
-      ],
-      "options": {
-        "buildTarget": "build"
-      }
-    },
-    "copy-workspace-modules": {
-      "dependsOn": ["build"],
-      "cache": true,
-      "outputs": ["{workspaceRoot}/dist/apps/backend/workspace_modules"],
-      "executor": "@nx/js:copy-workspace-modules",
-      "options": {
-        "buildTarget": "build"
-      }
-    },
-    "prune": {
-      "dependsOn": ["prune-lockfile", "copy-workspace-modules"],
-      "executor": "nx:noop"
-    },
+
     "serve": {
       "continuous": true,
       "executor": "@nx/js:node",
       "defaultConfiguration": "development",
-      "dependsOn": ["build"],
+      "dependsOn": ["^build"],
       "options": {
-        "buildTarget": "backend:build",
-        "runBuildTargetDependencies": false
+        "buildTarget": "backend:build:serve",
+        "runBuildTargetDependencies": false,
+        "watch": true
       },
       "configurations": {
         "development": {
-          "buildTarget": "backend:build:development"
+          "buildTarget": "backend:build:serve"
         },
         "production": {
-          "buildTarget": "backend:build:production"
+          "buildTarget": "backend:build:serve"
         }
       }
     },
-    "serve:serverless": {
+    "dev": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "serverless offline",
+        "command": "tsx watch src/main.ts",
         "cwd": "apps/backend"
       }
     },
-    "deploy": {
+    "package": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "cd dist/apps/backend && zip -r ../backend-lambda.zip .",
+        "cwd": "."
+      }
+    },
+    "sam:build": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "sam build",
+        "cwd": "../../"
+      }
+    },
+    "sam:deploy": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["sam:build"],
+      "options": {
+        "command": "sam deploy",
+        "cwd": "../../"
+      }
+    },
+    "sam:deploy:guided": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["sam:build"],
+      "options": {
+        "command": "sam deploy --guided",
+        "cwd": "../../"
+      }
+    },
+    "sam:local:api": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["sam:build"],
+      "options": {
+        "command": "sam local start-api --host 0.0.0.0 --port 3000",
+        "cwd": "../../"
+      }
+    },
+    "sam:local:invoke": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["sam:build"],
+      "options": {
+        "command": "sam local invoke BackendFunction --event events/api-gateway-get-root.json",
+        "cwd": "../../"
+      }
+    },
+    "sls:deploy": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
         "command": "serverless deploy",
-        "cwd": "apps/backend"
+        "cwd": "../../"
+      }
+    },
+    "sls:deploy:dev": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "serverless deploy --stage dev",
+        "cwd": "../../"
+      }
+    },
+    "sls:deploy:prod": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "serverless deploy --stage prod",
+        "cwd": "../../"
+      }
+    },
+    "sls:offline": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["build"],
+      "options": {
+        "command": "serverless offline start",
+        "cwd": "../../"
+      }
+    },
+    "sls:dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "parallel": false,
+        "commands": ["nx build backend --watch", "nx run backend:sls:offline"]
+      }
+    },
+    "sls:remove": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "serverless remove",
+        "cwd": "../../"
+      }
+    },
+    "deploy:aws": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["package"],
+      "options": {
+        "command": "aws lambda update-function-code --function-name nx-serverless-backend --zip-file fileb://dist/backend-lambda.zip",
+        "cwd": "."
       }
     },
     "prisma:generate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "prisma generate",
-        "cwd": "apps/backend"
+        "command": "nx run data:prisma:generate"
       }
     },
     "prisma:migrate": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "prisma migrate dev",
-        "cwd": "apps/backend"
+        "command": "nx run data:prisma:migrate"
       }
     },
     "prisma:studio": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "prisma studio",
-        "cwd": "apps/backend"
+        "command": "nx run data:prisma:studio"
       }
     },
     "prisma:push": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "prisma db push",
-        "cwd": "apps/backend"
+        "command": "nx run data:prisma:push"
       }
     },
     "prisma:seed": {
       "executor": "nx:run-commands",
       "options": {
-        "command": "tsx prisma/seed.ts",
-        "cwd": "apps/backend"
+        "command": "nx run data:prisma:seed"
       }
     },
     "lint": {
@@ -146,6 +224,33 @@
         "eslintConfig": ".eslintrc.json",
         "ignorePath": ".eslintignore",
         "fix": true
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write 'apps/backend/**/*.{ts,tsx,js,jsx,json,md}'"
+      }
+    },
+    "format:check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --check 'apps/backend/**/*.{ts,tsx,js,jsx,json,md}'"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/backend/jest.config.ts"
+      }
+    },
+    "test:coverage": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/backend/jest.config.ts",
+        "coverage": true
       }
     }
   },

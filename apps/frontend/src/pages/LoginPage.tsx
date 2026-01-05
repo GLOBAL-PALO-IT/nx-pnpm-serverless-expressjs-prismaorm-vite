@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from '@tanstack/react-router';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './LoginPage.module.css';
 
@@ -39,7 +39,7 @@ export function LoginPage() {
       }
 
       // Redirect to home page after successful login/register
-      navigate('/');
+      navigate({ to: '/' });
     } catch (err: any) {
       setError(
         err.message || `${isRegisterMode ? 'Registration' : 'Login'} failed`

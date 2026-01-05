@@ -1,3 +1,3 @@
-export { authRouter } from './auth';
-export { usersRouter } from './users';
-export { postsRouter } from './posts';
+export { authRouter } from './auth.routes';
+export { usersRouter } from './users.routes';
+export { postsRouter } from './posts.routes';

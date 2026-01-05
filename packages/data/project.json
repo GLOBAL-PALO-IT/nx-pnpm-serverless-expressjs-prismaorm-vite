@@ -1,0 +1,95 @@
+{
+  "name": "data",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/data/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/packages/data",
+        "main": "packages/data/src/index.ts",
+        "tsConfig": "packages/data/tsconfig.lib.json",
+        "assets": ["packages/data/*.md"]
+      }
+    },
+    "prisma:generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prisma generate --schema=packages/data/prisma/schema.prisma"
+      }
+    },
+    "prisma:migrate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prisma migrate dev --schema=packages/data/prisma/schema.prisma"
+      }
+    },
+    "prisma:push": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prisma db push --schema=packages/data/prisma/schema.prisma"
+      }
+    },
+    "prisma:studio": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prisma studio --schema=packages/data/prisma/schema.prisma"
+      }
+    },
+    "prisma:seed": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "tsx packages/data/prisma/seed.ts"
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/data/**/*.{ts,tsx,js,jsx}"],
+        "eslintConfig": ".eslintrc.json",
+        "ignorePath": ".eslintignore"
+      }
+    },
+    "lint:fix": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["packages/data/**/*.{ts,tsx,js,jsx}"],
+        "eslintConfig": ".eslintrc.json",
+        "ignorePath": ".eslintignore",
+        "fix": true
+      }
+    },
+    "format": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --write 'packages/data/**/*.{ts,tsx,js,jsx,json,md}'"
+      }
+    },
+    "format:check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "prettier --check 'packages/data/**/*.{ts,tsx,js,jsx,json,md}'"
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/data/jest.config.ts"
+      }
+    },
+    "test:coverage": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "packages/data/jest.config.ts",
+        "coverage": true
+      }
+    }
+  },
+  "tags": ["scope:data", "type:library"]
+}

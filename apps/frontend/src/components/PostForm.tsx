@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { Post, CreatePostInput, UpdatePostInput } from '../services/api';
-import styles from './PostForm.module.css';
+import {
+  Button,
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardFooter,
+  Input,
+  Label,
+  Textarea,
+} from '@nx-serverless/ui';
 
 interface PostFormProps {
   post?: Post;
@@ -71,72 +81,72 @@ export function PostForm({
     };
 
   return (
-    <form onSubmit={handleSubmit} className={styles.postForm}>
-      <h3>{post ? 'Edit Post' : 'Create New Post'}</h3>
+    <Card className="w-full">
+      <CardHeader>
+        <CardTitle>{post ? 'Edit Post' : 'Create New Post'}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">
+              Title <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              type="text"
+              id="title"
+              value={formData.title}
+              onChange={handleChange('title')}
+              className={errors.title ? 'border-destructive' : ''}
+              disabled={loading}
+              required
+            />
+            {errors.title && (
+              <p className="text-sm text-destructive">{errors.title}</p>
+            )}
+          </div>
 
-      <div className={styles.formGroup}>
-        <label htmlFor="title" className={styles.label}>
-          Title *
-        </label>
-        <input
-          type="text"
-          id="title"
-          value={formData.title}
-          onChange={handleChange('title')}
-          className={`${styles.input} ${errors.title ? styles.inputError : ''}`}
-          disabled={loading}
-          required
-        />
-        {errors.title && <span className={styles.error}>{errors.title}</span>}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="content">Content</Label>
+            <Textarea
+              id="content"
+              value={formData.content}
+              onChange={handleChange('content')}
+              disabled={loading}
+              rows={6}
+              placeholder="Write your post content here..."
+            />
+          </div>
 
-      <div className={styles.formGroup}>
-        <label htmlFor="content" className={styles.label}>
-          Content
-        </label>
-        <textarea
-          id="content"
-          value={formData.content}
-          onChange={handleChange('content')}
-          className={styles.textarea}
-          disabled={loading}
-          rows={6}
-          placeholder="Write your post content here..."
-        />
-      </div>
-
-      <div className={styles.formGroup}>
-        <label className={styles.checkboxLabel}>
-          <input
-            type="checkbox"
-            checked={formData.published}
-            onChange={handleChange('published')}
-            className={styles.checkbox}
-            disabled={loading}
-          />
-          <span className={styles.checkboxText}>Published</span>
-        </label>
-      </div>
-
-      <div className={styles.formActions}>
-        <button
-          type="submit"
-          className={`${styles.button} ${styles.buttonPrimary}`}
-          disabled={loading}
-        >
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="published"
+              checked={formData.published}
+              onChange={handleChange('published')}
+              disabled={loading}
+              className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-ring focus:ring-offset-2"
+            />
+            <Label htmlFor="published" className="cursor-pointer">
+              Published
+            </Label>
+          </div>
+        </form>
+      </CardContent>
+      <CardFooter className="flex gap-2">
+        <Button type="submit" onClick={handleSubmit} disabled={loading}>
           {loading ? 'Saving...' : post ? 'Update Post' : 'Create Post'}
-        </button>
+        </Button>
         {onCancel && (
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={onCancel}
-            className={`${styles.button} ${styles.buttonSecondary}`}
             disabled={loading}
           >
             Cancel
-          </button>
+          </Button>
         )}
-      </div>
-    </form>
+      </CardFooter>
+    </Card>
   );
 }

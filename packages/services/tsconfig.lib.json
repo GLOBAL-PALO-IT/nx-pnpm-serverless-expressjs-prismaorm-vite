@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"],
+    "rootDir": ".",
+    "baseUrl": ".",
+    "paths": {
+      "@nx-serverless/data": ["../../dist/packages/data"],
+      "@nx-serverless/types": ["../../dist/packages/types"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}

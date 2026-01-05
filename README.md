@@ -2,6 +2,13 @@
 
 A modern full-stack TypeScript monorepo built with Nx, featuring a React frontend and Express.js serverless backend.
 
+> **📌 Recent Update**: The project has been refactored for better modularity:
+> - Database layer: `packages/data` (Prisma)
+> - Business logic: `packages/services`
+> - Validation schemas: `packages/types` (Zod schemas)
+> 
+> See [REFACTORING-SUMMARY.md](REFACTORING-SUMMARY.md) for details.
+
 ## 🚀 Quick Start
 
 ```bash
@@ -41,13 +48,10 @@ nx-serverless/
 │   │   │   ├── app.ts        # Express app configuration
 │   │   │   ├── lambda.ts     # AWS Lambda handler
 │   │   │   ├── main.ts       # Local development server
-│   │   │   ├── libs/         # Database and utility libraries
 │   │   │   ├── middleware/   # Auth and validation middleware
 │   │   │   ├── routes/       # API route handlers
-│   │   │   ├── schemas/      # Zod validation schemas
-│   │   │   └── services/     # Business logic and services
-│   │   ├── prisma/           # Database schema and migrations
-│   │   └── serverless.yml    # Serverless Framework configuration
+│   │   │   └── schemas/      # Zod validation schemas
+│   │   └── project.json      # Nx project configuration
 │   ├── frontend/             # React frontend application
 │   │   ├── src/
 │   │   │   ├── app/          # Main app component
@@ -58,11 +62,28 @@ nx-serverless/
 │   │   │   └── main.tsx      # Application entry point
 │   │   └── vite.config.ts    # Vite configuration
 │   └── frontend-e2e/         # End-to-end tests with Cypress
-├── packages/                 # Shared packages (future use)
-├── tools/                    # Custom tools and scripts
-├── tmp/                      # Temporary build files
-├── .eslintrc.json           # ESLint configuration
-├── jest.config.ts           # Jest configuration
+├── packages/                 # Shared libraries
+│   ├── data/                 # Database layer (Prisma)
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma # Database schema definition
+│   │   │   └── seed.ts       # Database seeding script
+│   │   ├── src/
+│   │   │   └── index.ts      # Prisma client export
+│   │   └── project.json      # Nx project configuration
+│   ├── services/             # Business logic layer
+│   │   ├── src/
+│   │   │   ├── authService.ts    # Authentication service
+│   │   │   ├── postService.ts    # Post CRUD service
+│   │   │   ├── userService.ts    # User management service
+│   │   │   └── index.ts          # Barrel export
+│   │   └── project.json      # Nx project configuration
+│   └── types/                # Zod schemas & TypeScript types
+│       ├── src/
+│       │   ├── authSchemas.ts    # Auth validation schemas
+│       │   ├── postSchemas.ts    # Post validation schemas
+│       │   ├── userSchemas.ts    # User validation schemas
+│       │   └── index.ts          # Barrel export
+│       └── project.json      # Nx project configuration
 ├── nx.json                  # Nx workspace configuration
 ├── pnpm-workspace.yaml      # pnpm workspace configuration
 └── package.json             # Workspace dependencies and scripts

@@ -21,7 +21,12 @@ src/
 ### 1. Import validation middleware and schemas
 
 ```typescript
-import { validateBody, validateParams, validateQuery, validateMultiple } from './middleware/validation';
+import {
+  validateBody,
+  validateParams,
+  validateQuery,
+  validateMultiple,
+} from './middleware/validation';
 import { CreateUserSchema, UserIdSchema } from './schemas';
 ```
 
@@ -50,10 +55,11 @@ app.get('/api/users', validateQuery(UserQuerySchema), async (req, res) => {
 });
 
 // Validate multiple parts of the request
-app.put('/api/users/:id', 
+app.put(
+  '/api/users/:id',
   validateMultiple({
     params: UserIdSchema,
-    body: UpdateUserSchema
+    body: UpdateUserSchema,
   }),
   async (req, res) => {
     // Both params and body are validated
@@ -67,6 +73,7 @@ app.put('/api/users/:id',
 ## 🛡️ Available Schemas
 
 ### User Schemas
+
 - `CreateUserSchema` - For creating new users
 - `UpdateUserSchema` - For updating existing users
 - `UserIdSchema` - For validating user ID parameters
@@ -74,6 +81,7 @@ app.put('/api/users/:id',
 - `UserQuerySchema` - For user list query parameters
 
 ### Post Schemas
+
 - `CreatePostSchema` - For creating new posts
 - `UpdatePostSchema` - For updating existing posts
 - `PostIdSchema` - For validating post ID parameters
@@ -94,6 +102,7 @@ app.put('/api/users/:id',
 ### 🔄 Automatic Transformations
 
 Query parameters are automatically transformed:
+
 - `"true"/"false"` strings → `boolean` values
 - String IDs are validated as CUIDs
 - Empty optional fields are handled correctly
@@ -121,19 +130,21 @@ When validation fails, you get structured error responses:
 ## 🔧 Validation Middleware Options
 
 ### Single Target Validation
+
 ```typescript
-validateBody(schema)    // Validate request body
-validateParams(schema)  // Validate URL parameters
-validateQuery(schema)   // Validate query parameters
+validateBody(schema); // Validate request body
+validateParams(schema); // Validate URL parameters
+validateQuery(schema); // Validate query parameters
 ```
 
 ### Multiple Target Validation
+
 ```typescript
 validateMultiple({
-  body: BodySchema,      // Optional
-  params: ParamsSchema,  // Optional
-  query: QuerySchema,    // Optional
-})
+  body: BodySchema, // Optional
+  params: ParamsSchema, // Optional
+  query: QuerySchema, // Optional
+});
 ```
 
 ## 💡 Best Practices
@@ -147,6 +158,7 @@ validateMultiple({
 ## 🔍 Example Usage
 
 Check out `src/examples/zodValidationExamples.ts` for comprehensive examples including:
+
 - Basic validation patterns
 - Complex nested validations
 - Custom validation functions

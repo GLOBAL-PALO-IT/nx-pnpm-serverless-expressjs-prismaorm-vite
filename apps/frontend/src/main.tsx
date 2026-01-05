@@ -1,8 +1,28 @@
 import { StrictMode } from 'react';
-import { BrowserRouter } from 'react-router-dom';
 import * as ReactDOM from 'react-dom/client';
-import App from './app/app';
-import { AuthProvider } from './contexts/AuthContext';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { routeTree } from './routeTree.gen';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+
+// Create a new router instance
+const router = createRouter({
+  routeTree,
+  context: {
+    auth: undefined!, // This will be set after we wrap the app with AuthProvider
+  },
+});
+
+// Register the router instance for type safety
+declare module '@tanstack/react-router' {
+  interface Register {
+    router: typeof router;
+  }
+}
+
+function InnerApp() {
+  const auth = useAuth();
+  return <RouterProvider router={router} context={{ auth }} />;
+}
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
@@ -10,10 +30,8 @@ const root = ReactDOM.createRoot(
 
 root.render(
   <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
-    </BrowserRouter>
+    <AuthProvider>
+      <InnerApp />
+    </AuthProvider>
   </StrictMode>
 );

@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
-import { authService } from '../services/authService';
+import { AuthService } from '@nx-serverless/services';
 import { logger } from '../libs/logger';
+
+// Create AuthService instance with logger
+const authService = new AuthService(logger);
 
 // Extend Express Request interface to include user
 declare global {

@@ -1,0 +1,142 @@
+service: nx-serverless-backend
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ${opt:region, 'us-east-1'}
+  stage: ${opt:stage, 'dev'}
+  environment:
+    NODE_ENV: ${self:provider.stage}
+    DATABASE_URL: ${env:DATABASE_URL}
+  # Enable API Gateway request/response logging
+  logs:
+    restApi: true
+  # Enable X-Ray tracing
+  tracing:
+    lambda: true
+    apiGateway: true
+  # IAM role statements for the Lambda function
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+          Resource: '*'
+        - Effect: Allow
+          Action:
+            - xray:PutTraceSegments
+            - xray:PutTelemetryRecords
+          Resource: '*'
+
+# Use pre-built artifacts from Nx
+package:
+  individually: false
+  patterns:
+    - '!**'
+    - 'dist/apps/backend/**'
+
+plugins:
+  - serverless-offline
+
+custom:
+  # Serverless Offline configuration
+  serverless-offline:
+    httpPort: 3000
+    host: 0.0.0.0
+    noPrependStageInUrl: true
+    noAuth: true
+    corsAllowCredentials: true
+    corsAllowHeaders: 'accept,content-type,x-api-key,authorization'
+    corsAllowOrigin: '*'
+    # Use Lambda runtime for more accurate local testing
+    useChildProcesses: true
+    # Enable request/response logging
+    printOutput: true
+    # Use the built files
+    location: dist/apps/backend
+
+  # Environment-specific configurations
+  environments:
+    dev:
+      memorySize: 512
+      timeout: 30
+    staging:
+      memorySize: 1024
+      timeout: 60
+    prod:
+      memorySize: 1024
+      timeout: 60
+      esbuild:
+        minify: true
+
+functions:
+  api:
+    name: ${self:service}-${self:provider.stage}
+    handler: lambda.handler
+    memorySize: ${self:custom.environments.${self:provider.stage}.memorySize, 512}
+    timeout: ${self:custom.environments.${self:provider.stage}.timeout, 30}
+    events:
+      - http:
+          path: /
+          method: ANY
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors:
+            origin: '*'
+            headers:
+              - Content-Type
+              - X-Amz-Date
+              - Authorization
+              - X-Api-Key
+              - X-Amz-Security-Token
+              - X-Amz-User-Agent
+            allowCredentials: true
+
+# CloudFormation resources
+resources:
+  Resources:
+    # CloudWatch Log Group with retention policy
+    ApiLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/lambda/${self:service}-${self:provider.stage}
+        RetentionInDays: 14
+
+  # Stack outputs
+  Outputs:
+    ApiUrl:
+      Description: URL of the API Gateway
+      Value:
+        Fn::Join:
+          - ''
+          - - 'https://'
+            - Ref: RestApiApigEvent
+            - '.execute-api.'
+            - Ref: AWS::Region
+            - '.amazonaws.com/'
+            - ${self:provider.stage}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-ApiUrl
+    
+    LambdaFunctionArn:
+      Description: ARN of the Lambda function
+      Value:
+        Fn::GetAtt: [ApiLambdaFunction, Arn]
+      Export:
+        Name: ${self:service}-${self:provider.stage}-LambdaArn
